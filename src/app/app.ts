@@ -31,8 +31,11 @@ export class App {
   protected readonly authError = this.authService.error;
   protected readonly authLoading = this.authService.loading;
   protected readonly emailAuthMode = this.authService.emailMode;
+  protected readonly isAuthenticated = this.authService.isAuthenticated;
+  protected readonly customerProfile = this.authService.customerProfile;
   protected readonly cartOpen = signal(false);
   protected readonly checkoutOpen = signal(false);
+  protected readonly profileOpen = signal(false);
   protected readonly pendingCheckout = signal(false);
   protected readonly orderConfirmation = signal(false);
   protected readonly cartItems = this.cartService.items;
@@ -50,6 +53,28 @@ export class App {
 
   protected closeLogin(): void {
     this.authService.closeLogin();
+  }
+
+  protected openProfile(): void {
+    this.profileOpen.set(true);
+  }
+
+  protected closeProfile(): void {
+    this.profileOpen.set(false);
+  }
+
+  protected async saveProfile(event: Event): Promise<void> {
+    event.preventDefault();
+    const form = event.target as HTMLFormElement;
+    const saved = await this.authService.updateCustomerProfile(
+      new FormData(form).get('displayName')?.toString() ?? ''
+    );
+    if (saved) this.closeProfile();
+  }
+
+  protected async signOut(): Promise<void> {
+    await this.authService.signOut();
+    this.closeProfile();
   }
 
   protected async requestOtp(event: Event): Promise<void> {

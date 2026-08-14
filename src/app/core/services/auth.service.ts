@@ -1,10 +1,15 @@
 import { Injectable, signal } from '@angular/core';
 import { FirebaseApp, initializeApp } from 'firebase/app';
-import { Auth, ConfirmationResult, RecaptchaVerifier, createUserWithEmailAndPassword, getAuth, onAuthStateChanged, sendEmailVerification, signInWithEmailAndPassword, signInWithPhoneNumber } from 'firebase/auth';
+import { Auth, ConfirmationResult, RecaptchaVerifier, createUserWithEmailAndPassword, getAuth, onAuthStateChanged, sendEmailVerification, signInWithEmailAndPassword, signInWithPhoneNumber, signOut, updateProfile } from 'firebase/auth';
 import { environment } from '../../../environments/environment';
 
 export type AuthStep = 'phone' | 'verification' | 'email' | 'verified';
 export type EmailAuthMode = 'signIn' | 'register';
+export interface CustomerProfile {
+  displayName: string;
+  email: string;
+  phoneNumber: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -15,6 +20,7 @@ export class AuthService {
   readonly loading = signal(false);
   readonly emailMode = signal<EmailAuthMode>('signIn');
   readonly isAuthenticated = signal(false);
+  readonly customerProfile = signal<CustomerProfile | null>(null);
 
   private readonly firebaseApp: FirebaseApp = initializeApp(environment.firebase);
   private readonly auth: Auth = getAuth(this.firebaseApp);
@@ -24,6 +30,11 @@ export class AuthService {
   constructor() {
     onAuthStateChanged(this.auth, (user) => {
       this.isAuthenticated.set(user !== null);
+      this.customerProfile.set(user ? {
+        displayName: user.displayName ?? '',
+        email: user.email ?? '',
+        phoneNumber: user.phoneNumber ?? ''
+      } : null);
       if (user) this.step.set('verified');
     });
   }
@@ -125,6 +136,42 @@ export class AuthService {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  async updateCustomerProfile(displayName: string): Promise<boolean> {
+    const name = displayName.trim();
+    if (!name) {
+      this.error.set('Enter your name before saving your profile.');
+      return false;
+    }
+    if (!this.auth.currentUser) {
+      this.error.set('Your session has ended. Please sign in again.');
+      return false;
+    }
+
+    this.loading.set(true);
+    this.error.set('');
+    try {
+      await updateProfile(this.auth.currentUser, { displayName: name });
+      const existingProfile = this.customerProfile();
+      this.customerProfile.set({
+        displayName: name,
+        email: existingProfile?.email ?? this.auth.currentUser.email ?? '',
+        phoneNumber: existingProfile?.phoneNumber ?? this.auth.currentUser.phoneNumber ?? ''
+      });
+      return true;
+    } catch (error: unknown) {
+      this.error.set('We could not save your profile. Please try again.');
+      console.error('Firebase profile update failed:', error);
+      return false;
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  async signOut(): Promise<void> {
+    await signOut(this.auth);
+    this.resetFlow();
   }
 
   resetFlow(): void {
