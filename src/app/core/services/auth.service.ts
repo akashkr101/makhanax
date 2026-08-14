@@ -1,22 +1,32 @@
 import { Injectable, signal } from '@angular/core';
 import { FirebaseApp, initializeApp } from 'firebase/app';
-import { Auth, ConfirmationResult, RecaptchaVerifier, getAuth, signInWithPhoneNumber } from 'firebase/auth';
+import { Auth, ConfirmationResult, RecaptchaVerifier, createUserWithEmailAndPassword, getAuth, onAuthStateChanged, sendEmailVerification, signInWithEmailAndPassword, signInWithPhoneNumber } from 'firebase/auth';
 import { environment } from '../../../environments/environment';
 
-export type OtpStep = 'phone' | 'verification' | 'verified';
+export type AuthStep = 'phone' | 'verification' | 'email' | 'verified';
+export type EmailAuthMode = 'signIn' | 'register';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  readonly step = signal<OtpStep>('phone');
+  readonly step = signal<AuthStep>('phone');
   readonly phoneNumber = signal('');
   readonly loginOpen = signal(false);
   readonly error = signal('');
   readonly loading = signal(false);
+  readonly emailMode = signal<EmailAuthMode>('signIn');
+  readonly isAuthenticated = signal(false);
 
   private readonly firebaseApp: FirebaseApp = initializeApp(environment.firebase);
   private readonly auth: Auth = getAuth(this.firebaseApp);
   private confirmationResult?: ConfirmationResult;
   private recaptchaVerifier?: RecaptchaVerifier;
+
+  constructor() {
+    onAuthStateChanged(this.auth, (user) => {
+      this.isAuthenticated.set(user !== null);
+      if (user) this.step.set('verified');
+    });
+  }
 
   openLogin(): void {
     this.loginOpen.set(true);
@@ -73,11 +83,59 @@ export class AuthService {
     }
   }
 
+  usePhoneLogin(): void {
+    this.error.set('');
+    this.step.set('phone');
+    this.destroyRecaptcha();
+  }
+
+  useEmailLogin(mode: EmailAuthMode = 'signIn'): void {
+    this.error.set('');
+    this.emailMode.set(mode);
+    this.step.set('email');
+    this.destroyRecaptcha();
+  }
+
+  async authenticateWithEmail(email: string, password: string): Promise<boolean> {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!this.isValidEmail(normalizedEmail)) {
+      this.error.set('Enter a valid email address.');
+      return false;
+    }
+    if (password.length < 8) {
+      this.error.set('Password must contain at least 8 characters.');
+      return false;
+    }
+
+    this.loading.set(true);
+    this.error.set('');
+    try {
+      if (this.emailMode() === 'register') {
+        const credential = await createUserWithEmailAndPassword(this.auth, normalizedEmail, password);
+        await sendEmailVerification(credential.user);
+      } else {
+        await signInWithEmailAndPassword(this.auth, normalizedEmail, password);
+      }
+      this.step.set('verified');
+      return true;
+    } catch (error: unknown) {
+      this.error.set(this.getEmailError(error));
+      console.error('Firebase email authentication failed:', error);
+      return false;
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
   resetFlow(): void {
     this.step.set('phone');
     this.error.set('');
     this.confirmationResult = undefined;
     this.destroyRecaptcha();
+  }
+
+  private isValidEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
   private destroyRecaptcha(): void {
@@ -110,6 +168,17 @@ export class AuthService {
     if (code === 'auth/invalid-verification-code') return 'That OTP is incorrect. Check the SMS and try again.';
     if (code === 'auth/code-expired') return 'That OTP has expired. Request a new code.';
     return 'OTP verification failed. Request a new code and try again.';
+  }
+
+  private getEmailError(error: unknown): string {
+    switch (this.getFirebaseErrorCode(error)) {
+      case 'auth/operation-not-allowed': return 'Email and password sign-in is not enabled in Firebase Console.';
+      case 'auth/invalid-credential': return 'Email address or password is incorrect.';
+      case 'auth/email-already-in-use': return 'An account already exists with this email. Try signing in instead.';
+      case 'auth/weak-password': return 'Choose a stronger password with at least 8 characters.';
+      case 'auth/too-many-requests': return 'Too many sign-in attempts. Please wait and try again.';
+      default: return 'We could not complete email sign-in. Please try again.';
+    }
   }
 
   private getFirebaseErrorCode(error: unknown): string {

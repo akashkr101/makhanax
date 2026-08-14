@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { CartDrawerComponent } from './components/cart-drawer/cart-drawer.component';
 import { CheckoutComponent } from './components/checkout/checkout.component';
 import { ProductCatalogComponent } from './components/product-catalog/product-catalog.component';
-import { AuthService } from './core/services/auth.service';
+import { AuthService, EmailAuthMode } from './core/services/auth.service';
 import { CartService } from './core/services/cart.service';
 import { Product } from './models/product';
 
@@ -30,6 +30,7 @@ export class App {
   protected readonly otpVerified = computed(() => this.authService.step() === 'verified');
   protected readonly authError = this.authService.error;
   protected readonly authLoading = this.authService.loading;
+  protected readonly emailAuthMode = this.authService.emailMode;
   protected readonly cartOpen = signal(false);
   protected readonly checkoutOpen = signal(false);
   protected readonly pendingCheckout = signal(false);
@@ -72,6 +73,29 @@ export class App {
     this.authService.resetFlow();
   }
 
+  protected usePhoneLogin(): void {
+    this.authService.usePhoneLogin();
+  }
+
+  protected useEmailLogin(mode: EmailAuthMode = 'signIn'): void {
+    this.authService.useEmailLogin(mode);
+  }
+
+  protected async authenticateWithEmail(event: Event): Promise<void> {
+    event.preventDefault();
+    const form = event.target as HTMLFormElement;
+    const credentials = new FormData(form);
+    const authenticated = await this.authService.authenticateWithEmail(
+      credentials.get('email')?.toString() ?? '',
+      credentials.get('password')?.toString() ?? ''
+    );
+    if (authenticated && this.pendingCheckout()) {
+      this.pendingCheckout.set(false);
+      this.authService.closeLogin();
+      this.checkoutOpen.set(true);
+    }
+  }
+
   protected addToCart(product: Product): void {
     this.cartService.add(product);
     this.cartOpen.set(true);
@@ -87,7 +111,7 @@ export class App {
 
   protected beginCheckout(): void {
     this.cartOpen.set(false);
-    if (this.authService.step() === 'verified') {
+    if (this.authService.isAuthenticated()) {
       this.checkoutOpen.set(true);
       return;
     }
