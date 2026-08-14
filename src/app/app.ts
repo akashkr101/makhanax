@@ -10,7 +10,7 @@ import { Product } from './models/product';
   selector: 'app-root',
   imports: [ProductCatalogComponent, CartDrawerComponent, CheckoutComponent],
   templateUrl: './app.html',
-  styleUrl: './app.scss',
+  styleUrls: ['./app.scss', './app-overrides.scss'],
 })
 export class App {
   private readonly authService = inject(AuthService);

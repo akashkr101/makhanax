@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, output } from '@angular/core';
+import { Component, effect, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AddressBookService, AddressCategory } from '../../core/services/address-book.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -22,6 +22,8 @@ export class CheckoutComponent {
   protected fullName = '';
   protected phoneNumber = '';
   protected deliveryAddress = '';
+  protected readonly savingAddress = signal(false);
+  protected readonly addressSaveStatus = signal('');
   protected readonly savedAddresses = this.addressBookService.addresses;
   protected readonly addressBookError = this.addressBookService.error;
 
@@ -46,11 +48,40 @@ export class CheckoutComponent {
 
   protected selectAddressCategory(category: AddressCategory): void {
     this.addressCategory = category;
+    this.addressSaveStatus.set('');
     const savedAddress = this.savedAddresses()[category];
     if (!savedAddress) return;
     this.fullName = savedAddress.name;
     this.phoneNumber = savedAddress.phone;
     this.deliveryAddress = savedAddress.address;
+  }
+
+  protected async saveAddress(): Promise<void> {
+    if (!this.fullName.trim() || !this.phoneNumber.trim() || !this.deliveryAddress.trim()) {
+      this.addressSaveStatus.set('Complete your name, mobile number, and delivery address before saving.');
+      return;
+    }
+    const userId = this.authService.userId();
+    if (!userId) {
+      this.addressSaveStatus.set('Please sign in again before saving an address.');
+      return;
+    }
+
+    this.savingAddress.set(true);
+    this.addressSaveStatus.set('');
+    try {
+      await this.addressBookService.save(userId, this.addressCategory, {
+        name: this.fullName,
+        phone: this.phoneNumber,
+        address: this.deliveryAddress
+      });
+      this.addressSaveStatus.set(`${this.addressCategory[0].toUpperCase()}${this.addressCategory.slice(1)} address saved.`);
+    } catch (error: unknown) {
+      this.addressSaveStatus.set('We could not save this address. Please try again.');
+      console.error('Saving address failed:', error);
+    } finally {
+      this.savingAddress.set(false);
+    }
   }
 
   protected async placeOrder(event: Event): Promise<void> {

@@ -5,7 +5,7 @@ import { CartItem } from '../../models/product';
   selector: 'app-cart-drawer',
   standalone: true,
   templateUrl: './cart-drawer.component.html',
-  styleUrl: './cart-drawer.component.scss'
+  styleUrls: ['./cart-drawer.component.scss', './cart-drawer-overrides.scss']
 })
 export class CartDrawerComponent {
   readonly items = input<CartItem[]>([]);

@@ -10,12 +10,16 @@
         <h2 id="checkout-title">Make it<br><em>official.</em></h2>
         <form class="checkout-form" (submit)="placeOrder($event)">
           <h3>Delivery details</h3>
-          <div class="address-category-tabs" role="group" aria-label="Address type">
-            <button class="address-category" type="button" [class.active]="addressCategory === 'home'" [class.saved]="savedAddresses().home" [attr.aria-pressed]="addressCategory === 'home'" (click)="selectAddressCategory('home')"><span class="address-category-icon" aria-hidden="true">&#8962;</span>Home @if (savedAddresses().home) { <small>Saved</small> }</button>
-            <button class="address-category" type="button" [class.active]="addressCategory === 'office'" [class.saved]="savedAddresses().office" [attr.aria-pressed]="addressCategory === 'office'" (click)="selectAddressCategory('office')"><span class="address-category-icon" aria-hidden="true">&#9638;</span>Office @if (savedAddresses().office) { <small>Saved</small> }</button>
-            <button class="address-category" type="button" [class.active]="addressCategory === 'flat'" [class.saved]="savedAddresses().flat" [attr.aria-pressed]="addressCategory === 'flat'" (click)="selectAddressCategory('flat')"><span class="address-category-icon" aria-hidden="true">&#9641;</span>Flat @if (savedAddresses().flat) { <small>Saved</small> }</button>
-            <button class="address-category" type="button" [class.active]="addressCategory === 'other'" [class.saved]="savedAddresses().other" [attr.aria-pressed]="addressCategory === 'other'" (click)="selectAddressCategory('other')"><span class="address-category-icon" aria-hidden="true">&#9670;</span>Other @if (savedAddresses().other) { <small>Saved</small> }</button>
+          <div class="address-selection">
+            <div class="address-category-tabs" role="group" aria-label="Address type">
+              <button class="address-category" type="button" [class.active]="addressCategory === 'home'" [class.saved]="savedAddresses().home" [attr.aria-pressed]="addressCategory === 'home'" (click)="selectAddressCategory('home')"><span class="address-category-icon" aria-hidden="true">&#8962;</span>Home @if (savedAddresses().home) { <small>Saved</small> }</button>
+              <button class="address-category" type="button" [class.active]="addressCategory === 'office'" [class.saved]="savedAddresses().office" [attr.aria-pressed]="addressCategory === 'office'" (click)="selectAddressCategory('office')"><span class="address-category-icon" aria-hidden="true">&#9638;</span>Office @if (savedAddresses().office) { <small>Saved</small> }</button>
+              <button class="address-category" type="button" [class.active]="addressCategory === 'flat'" [class.saved]="savedAddresses().flat" [attr.aria-pressed]="addressCategory === 'flat'" (click)="selectAddressCategory('flat')"><span class="address-category-icon" aria-hidden="true">&#9641;</span>Flat @if (savedAddresses().flat) { <small>Saved</small> }</button>
+              <button class="address-category" type="button" [class.active]="addressCategory === 'other'" [class.saved]="savedAddresses().other" [attr.aria-pressed]="addressCategory === 'other'" (click)="selectAddressCategory('other')"><span class="address-category-icon" aria-hidden="true">&#9670;</span>Other @if (savedAddresses().other) { <small>Saved</small> }</button>
+            </div>
+            <button class="save-address" type="button" aria-label="Save selected address" title="Save selected address" [disabled]="savingAddress()" (click)="saveAddress()"><span aria-hidden="true">&#128190;</span></button>
           </div>
+          @if (addressSaveStatus()) { <p class="address-save-status" role="status">{{ addressSaveStatus() }}</p> }
           <label for="checkout-name">Full name</label>
           <input id="checkout-name" name="name" autocomplete="name" [(ngModel)]="fullName" required>
           <label for="checkout-phone">Mobile number</label>
