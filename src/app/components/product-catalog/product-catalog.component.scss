@@ -17,3 +17,5 @@
 
 @media (min-width: 601px) and (max-width: 900px) { .catalog-grid { gap: clamp(12px, 2.5vw, 22px); } .catalog-info { min-height: clamp(190px, 25vw, 220px); } .catalog-info h3 { font-size: clamp(21px, 3vw, 27px); } .catalog-buy button { padding-left: clamp(9px, 1.5vw, 13px); padding-right: clamp(9px, 1.5vw, 13px); } }
 @media (max-width: 380px) { .catalog-card { gap: 10px; grid-template-columns: 40% 1fr; } .catalog-info h3 { font-size: 19px; } .catalog-buy { align-items: flex-start; flex-direction: column; gap: 10px; } }
+
+.catalog-quantity { align-items: center; border: 1px solid var(--ink); display: inline-flex; } .catalog-quantity button { background: transparent; border: 0; color: var(--ink); cursor: pointer; font: 700 19px var(--body); height: 38px; width: 38px; } .catalog-quantity span { align-items: center; border-left: 1px solid rgba(27, 28, 23, .18); border-right: 1px solid rgba(27, 28, 23, .18); display: inline-flex; font-size: 13px; font-weight: 700; height: 38px; justify-content: center; min-width: 36px; } .catalog-quantity button:hover { background: var(--yellow); }

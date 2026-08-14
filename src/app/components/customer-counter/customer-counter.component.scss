@@ -1,19 +1,20 @@
 :host { display: block; }
 
 .customer-counter {
-  background: var(--yellow);
+  background: var(--ink);
+  color: var(--paper);
   display: grid;
-  grid-template-columns: minmax(280px, .9fr) minmax(0, 1.1fr);
+  grid-template-columns: minmax(360px, .82fr) minmax(0, 1.18fr);
   margin: 0 auto;
   max-width: none;
-  min-height: 430px;
+  min-height: 500px;
   overflow: hidden;
   width: 100%;
 }
 
 .customer-motion {
-  background: #d9ecea;
-  min-height: 430px;
+  background: #dcefed;
+  min-height: 500px;
   overflow: hidden;
   position: relative;
 }
@@ -57,7 +58,7 @@
 .customer-motion p {
   bottom: 32px;
   color: var(--ink);
-  font: 700 19px/1 var(--display);
+  font: 700 22px/1 var(--display);
   left: 32px;
   letter-spacing: -.03em;
   margin: 0;
@@ -69,29 +70,42 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 54px clamp(32px, 6vw, 82px);
+  padding: 68px clamp(44px, 7vw, 132px);
+  position: relative;
+}
+
+.customer-copy::before {
+  border: 1px solid rgba(243, 200, 91, .55);
+  border-radius: 50%;
+  content: '';
+  height: 230px;
+  position: absolute;
+  right: 10%;
+  top: -105px;
+  width: 230px;
 }
 
 .customer-copy h2 {
-  font: 600 clamp(38px, 4.6vw, 64px)/.98 var(--display);
+  font: 600 clamp(48px, 5.2vw, 82px)/.94 var(--display);
   letter-spacing: -.045em;
-  margin: 16px 0 34px;
+  margin: 18px 0 38px;
+  position: relative;
 }
 
 .customer-copy h2 em { color: var(--coral); font-style: normal; }
 
 .customer-number {
-  color: var(--ink);
+  color: var(--yellow);
   font-family: var(--display);
-  font-size: clamp(52px, 7vw, 90px);
+  font-size: clamp(70px, 9vw, 140px);
   font-variant-numeric: tabular-nums;
   letter-spacing: .08em;
   line-height: 1;
 }
 
 .customer-caption {
-  border-top: 1px solid rgba(36, 35, 30, .26);
-  font: 700 12px var(--body);
+  border-top: 1px solid rgba(248, 245, 237, .35);
+  font: 700 13px var(--body);
   letter-spacing: .08em;
   margin: 20px 0 0;
   padding-top: 14px;
