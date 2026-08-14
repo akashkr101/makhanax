@@ -20,6 +20,7 @@ export class AuthService {
   readonly loading = signal(false);
   readonly emailMode = signal<EmailAuthMode>('signIn');
   readonly isAuthenticated = signal(false);
+  readonly userId = signal('');
   readonly customerProfile = signal<CustomerProfile | null>(null);
 
   private readonly firebaseApp: FirebaseApp = initializeApp(environment.firebase);
@@ -30,6 +31,7 @@ export class AuthService {
   constructor() {
     onAuthStateChanged(this.auth, (user) => {
       this.isAuthenticated.set(user !== null);
+      this.userId.set(user?.uid ?? '');
       this.customerProfile.set(user ? {
         displayName: user.displayName ?? '',
         email: user.email ?? '',

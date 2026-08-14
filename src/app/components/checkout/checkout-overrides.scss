@@ -1,0 +1,45 @@
+.address-category-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+  margin: 10px 0 8px;
+}
+
+.address-category {
+  align-items: center;
+  background: transparent;
+  border: 1px solid rgba(27, 28, 23, .2);
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  font: 700 9px var(--body);
+  gap: 5px;
+  justify-content: center;
+  min-height: 54px;
+  padding: 6px 4px;
+  text-transform: uppercase;
+}
+
+.address-category:hover { border-color: var(--ink); }
+.address-category.active { background: var(--yellow); border-color: var(--ink); }
+.address-category:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+.address-category-icon { font-size: 17px; line-height: 1; }
+.address-category small { color: var(--coral); font-size: 8px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.address-category.active small { color: var(--ink); }
+
+.money-value {
+  font-family: var(--body) !important;
+  font-size: 13px !important;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  white-space: nowrap;
+}
+
+.summary-total .money-value { font-size: 19px !important; }
+.pay-now-button .money-value { font-size: 14px !important; }
+
+@media (max-width: 700px) {
+  .address-category-tabs { grid-template-columns: repeat(2, 1fr); }
+}

@@ -27,7 +27,6 @@ export class App {
     { code: '+971', name: 'UAE' }
   ];
   protected readonly otpSent = computed(() => this.authService.step() === 'verification');
-  protected readonly otpVerified = computed(() => this.authService.step() === 'verified');
   protected readonly authError = this.authService.error;
   protected readonly authLoading = this.authService.loading;
   protected readonly emailAuthMode = this.authService.emailMode;
@@ -37,6 +36,7 @@ export class App {
   protected readonly checkoutOpen = signal(false);
   protected readonly profileOpen = signal(false);
   protected readonly pendingCheckout = signal(false);
+  protected readonly cartNotice = signal('');
   protected readonly orderConfirmation = signal(false);
   protected readonly cartItems = this.cartService.items;
   protected readonly cartItemCount = this.cartService.itemCount;
@@ -87,11 +87,7 @@ export class App {
     const form = event.target as HTMLFormElement;
     const code = new FormData(form).get('otp')?.toString() ?? '';
     const verified = await this.authService.verifyOtp(code);
-    if (verified && this.pendingCheckout()) {
-      this.pendingCheckout.set(false);
-      this.authService.closeLogin();
-      this.checkoutOpen.set(true);
-    }
+    if (verified) this.completeLogin();
   }
 
   protected editPhone(): void {
@@ -114,15 +110,24 @@ export class App {
       credentials.get('email')?.toString() ?? '',
       credentials.get('password')?.toString() ?? ''
     );
-    if (authenticated && this.pendingCheckout()) {
-      this.pendingCheckout.set(false);
-      this.authService.closeLogin();
-      this.checkoutOpen.set(true);
-    }
+    if (authenticated) this.completeLogin();
+  }
+
+  private completeLogin(): void {
+    const shouldOpenCheckout = this.pendingCheckout();
+    this.pendingCheckout.set(false);
+    this.authService.closeLogin();
+    if (shouldOpenCheckout) this.checkoutOpen.set(true);
   }
 
   protected addToCart(product: Product): void {
     this.cartService.add(product);
+    this.cartNotice.set(`${product.name} (${product.size}) added to cart.`);
+    window.setTimeout(() => this.cartNotice.set(''), 3500);
+  }
+
+  protected openCartFromNotice(): void {
+    this.cartNotice.set('');
     this.cartOpen.set(true);
   }
 
