@@ -1,0 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Syne:wght@600;700;800&display=swap');
+
+:root { --paper: #fbf8f0; --ink: #24231e; --coral: #e96650; --yellow: #f3c85b; --soft-coral: #f2b0a2; --body: 'DM Sans', sans-serif; --display: 'Syne', sans-serif; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); margin: 0; overflow-x: hidden; }
+body::before { background-image: radial-gradient(rgba(27, 28, 23, .08) .6px, transparent .6px); background-size: 7px 7px; content: ''; inset: 0; opacity: .18; pointer-events: none; position: fixed; z-index: -1; }
+::selection { background: var(--coral); color: var(--paper); }

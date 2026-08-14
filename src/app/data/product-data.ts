@@ -1,0 +1,16 @@
+import { Product } from '../models/product';
+
+const roastedMakhana = 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Foxnut_Makhana_-_Nawada_District_-_Bihar_-_1.jpg/1920px-Foxnut_Makhana_-_Nawada_District_-_Bihar_-_1.jpg';
+const makhanaGrains = 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Euryale_ferox_grains_%281%29.jpg/1280px-Euryale_ferox_grains_%281%29.jpg';
+const masalaMakhana = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Makhana_%28Foxnut%29_roasted_with_masala_and_ghee.jpg/1920px-Makhana_%28Foxnut%29_roasted_with_masala_and_ghee.jpg';
+
+export const PRODUCTS: Product[] = [
+  { id: 'plain-250', name: 'Makhana Classic', category: 'normal', size: '250g', price: 299, image: roastedMakhana, tone: 'cream', description: 'Clean, lightly roasted fox nuts.' },
+  { id: 'plain-500', name: 'Makhana Classic', category: 'normal', size: '500g', price: 549, image: makhanaGrains, tone: 'cream', description: 'A pantry-sized everyday crunch.' },
+  { id: 'plain-1000', name: 'Makhana Classic', category: 'normal', size: '1 kg', price: 999, image: roastedMakhana, tone: 'cream', description: 'For families who snack often.' },
+  { id: 'plain-2000', name: 'Makhana Classic', category: 'normal', size: '2 kg', price: 1799, image: makhanaGrains, tone: 'cream', description: 'The generous stock-up pack.' },
+  { id: 'ready-250', name: 'Peri Peri Pop', category: 'ready-to-eat', size: '250g', price: 349, image: masalaMakhana, tone: 'yellow', description: 'Roasted masala makhana, ready straight from the pack.' },
+  { id: 'ready-500', name: 'Peri Peri Pop', category: 'ready-to-eat', size: '500g', price: 649, image: masalaMakhana, tone: 'yellow', description: 'A bigger bag for movie nights.' },
+  { id: 'ready-1000', name: 'Peri Peri Pop', category: 'ready-to-eat', size: '1 kg', price: 1199, image: masalaMakhana, tone: 'yellow', description: 'A bold, shareable family pack.' },
+  { id: 'ready-2000', name: 'Peri Peri Pop', category: 'ready-to-eat', size: '2 kg', price: 2199, image: masalaMakhana, tone: 'yellow', description: 'The wholesale-ready crunch supply.' }
+];

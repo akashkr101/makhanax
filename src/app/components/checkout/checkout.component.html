@@ -1,0 +1,47 @@
+<div class="checkout-backdrop">
+  <section class="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
+    <div class="checkout-top">
+      <button type="button" class="back-button" (click)="back.emit()">← Back to cart</button>
+      <span>SECURE CHECKOUT</span>
+    </div>
+    <div class="checkout-layout">
+      <div>
+        <p class="eyebrow">Almost yours</p>
+        <h2 id="checkout-title">Make it<br><em>official.</em></h2>
+        <form class="checkout-form" (submit)="placeOrder($event)">
+          <h3>Delivery details</h3>
+          <label for="checkout-name">Full name</label>
+          <input id="checkout-name" name="name" autocomplete="name" required>
+          <label for="checkout-phone">Mobile number</label>
+          <input id="checkout-phone" name="phone" type="tel" autocomplete="tel" required>
+          <label for="checkout-address">Delivery address</label>
+          <textarea id="checkout-address" name="address" rows="3" required></textarea>
+          <h3 class="payment-heading">Payment method</h3>
+          <div class="payment-options">
+            <label><input type="radio" name="payment" value="upi" [(ngModel)]="paymentMethod"><span>UPI<strong>Google Pay · PhonePe · Paytm</strong></span></label>
+            <label><input type="radio" name="payment" value="card" [(ngModel)]="paymentMethod"><span>Card<strong>Credit or debit card</strong></span></label>
+            <label><input type="radio" name="payment" value="netbanking" [(ngModel)]="paymentMethod"><span>Net banking<strong>All major banks</strong></span></label>
+            <label><input type="radio" name="payment" value="cod" [(ngModel)]="paymentMethod"><span>Cash on delivery<strong>Pay when it arrives</strong></span></label>
+          </div>
+          <button class="pay-now-button" type="submit">
+            <span class="pay-icon">✓</span>
+            <span class="pay-label">Pay now</span>
+            <strong>{{ formatPrice(total()) }}</strong>
+            <span class="pay-arrow">↗</span>
+          </button>
+          <p class="payment-note">Secure payment · Your order is confirmed after payment.</p>
+        </form>
+      </div>
+      <aside class="order-summary">
+        <p class="eyebrow">Your order</p>
+        @for (item of items(); track item.product.id) {
+          <div class="summary-item">
+            <span>{{ item.quantity }} × {{ item.product.name }}<small>{{ item.product.size }}</small></span>
+            <strong>{{ formatPrice(item.product.price * item.quantity) }}</strong>
+          </div>
+        }
+        <div class="summary-total"><span>Total</span><strong>{{ formatPrice(total()) }}</strong></div>
+      </aside>
+    </div>
+  </section>
+</div>
