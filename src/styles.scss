@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Syne:wght@600;700;800&display=swap');
 
-:root { --paper: #fbf8f0; --ink: #24231e; --coral: #34786f; --yellow: #f3c85b; --soft-coral: #a8d0c5; --body: 'DM Sans', sans-serif; --display: 'Syne', sans-serif; }
+:root { --paper: #fbf8f0; --ink: #24231e; --coral: #e96650; --yellow: #f3c85b; --soft-coral: #f2b0a2; --modal-offset: #a9b8ad; --body: 'DM Sans', sans-serif; --display: 'Syne', sans-serif; }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body { background: var(--paper); color: var(--ink); font-family: var(--body); margin: 0; overflow-x: hidden; }

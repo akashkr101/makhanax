@@ -50,7 +50,12 @@ export class CheckoutComponent {
     this.addressCategory = category;
     this.addressSaveStatus.set('');
     const savedAddress = this.savedAddresses()[category];
-    if (!savedAddress) return;
+    if (!savedAddress) {
+      this.fullName = '';
+      this.phoneNumber = '';
+      this.deliveryAddress = '';
+      return;
+    }
     this.fullName = savedAddress.name;
     this.phoneNumber = savedAddress.phone;
     this.deliveryAddress = savedAddress.address;

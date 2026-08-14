@@ -1,6 +1,7 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, HostListener, inject, signal } from '@angular/core';
 import { CartDrawerComponent } from './components/cart-drawer/cart-drawer.component';
 import { CheckoutComponent } from './components/checkout/checkout.component';
+import { CustomerCounterComponent } from './components/customer-counter/customer-counter.component';
 import { ProductCatalogComponent } from './components/product-catalog/product-catalog.component';
 import { AuthService, EmailAuthMode } from './core/services/auth.service';
 import { CartService } from './core/services/cart.service';
@@ -8,7 +9,7 @@ import { Product } from './models/product';
 
 @Component({
   selector: 'app-root',
-  imports: [ProductCatalogComponent, CartDrawerComponent, CheckoutComponent],
+  imports: [ProductCatalogComponent, CartDrawerComponent, CheckoutComponent, CustomerCounterComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.scss', './app-overrides.scss'],
 })
@@ -40,6 +41,20 @@ export class App {
   protected readonly orderConfirmation = signal(false);
   protected readonly cartItems = this.cartService.items;
   protected readonly cartItemCount = this.cartService.itemCount;
+  protected readonly headerHidden = signal(false);
+  private lastScrollPosition = 0;
+
+  @HostListener('window:scroll')
+  protected onWindowScroll(): void {
+    const currentScrollPosition = window.scrollY;
+    const scrollDifference = currentScrollPosition - this.lastScrollPosition;
+    if (currentScrollPosition < 24 || scrollDifference < -6) {
+      this.headerHidden.set(false);
+    } else if (scrollDifference > 6) {
+      this.headerHidden.set(true);
+    }
+    this.lastScrollPosition = currentScrollPosition;
+  }
 
   protected replaceImage(event: Event): void {
     const image = event.target as HTMLImageElement;
