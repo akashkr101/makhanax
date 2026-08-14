@@ -27,3 +27,54 @@ h1, h2, .display-copy { animation: rise-in .7s both; font-family: var(--display)
 @media (max-width: 900px) and (min-width: 601px) { .catalog-toolbar { align-items: start; display: block; } .size-note { justify-content: flex-start; margin-top: 28px; } .catalog-info h3 { font-size: 23px; } }
 @media (max-width: 700px) { .phone-fields { grid-template-columns: 112px 1fr; } .phone-fields select { font-size: 13px; } .checkout-modal { padding-left: 20px; padding-right: 20px; } .cart-drawer { max-width: none; } .order-toast { bottom: 15px; left: 15px; right: 15px; } }
 @media (max-width: 380px) { .brand { font-size: 19px; } .brand-mark { height: 25px; width: 25px; } .header-actions { gap: 8px; } .header-action { display: none; } .hero-copy { padding-left: 22px; padding-right: 22px; } h1 { font-size: 64px; } .phone-fields { grid-template-columns: 104px 1fr; } }
+
+/* Fluid layout refinements for the spaces between the main breakpoints. */
+@media (max-width: 600px) {
+	.site-header { min-height: 66px; }
+	.hero-copy { min-height: clamp(470px, 128vw, 560px); padding: clamp(42px, 11vw, 60px) clamp(22px, 7vw, 34px) 48px; }
+	h1 { font-size: clamp(58px, 17vw, 82px); }
+	.hero-intro { font-size: clamp(14px, 3.8vw, 17px); max-width: 32ch; }
+	.hero-image-wrap { min-height: clamp(300px, 84vw, 460px); }
+	.section { padding-bottom: clamp(68px, 16vw, 100px); padding-top: clamp(68px, 16vw, 100px); }
+	.field-note { padding-bottom: clamp(48px, 13vw, 72px); padding-top: clamp(48px, 13vw, 72px); }
+	.display-copy { font-size: clamp(40px, 11vw, 54px); }
+	.manifesto h2 { font-size: clamp(48px, 13vw, 68px); }
+	.site-footer { padding-left: 20px; padding-right: 20px; padding-top: clamp(52px, 13vw, 76px); }
+}
+
+@media (min-width: 601px) and (max-width: 1100px) {
+	.site-header, .hero, .proof-row { padding-left: clamp(22px, 4vw, 42px); padding-right: clamp(22px, 4vw, 42px); }
+	.hero { gap: clamp(12px, 2vw, 20px); min-height: clamp(520px, 66vw, 650px); }
+	.hero-copy, .hero-image-wrap { min-height: clamp(490px, 60vw, 610px); }
+	.hero-copy { padding: clamp(38px, 6vw, 62px) clamp(24px, 4vw, 50px); }
+	h1 { font-size: clamp(56px, 8vw, 88px); }
+	.hero-intro { font-size: clamp(14px, 1.5vw, 17px); }
+	.section { padding-bottom: clamp(82px, 10vw, 130px); padding-top: clamp(82px, 10vw, 130px); }
+	.field-note, .manifesto { padding-left: clamp(22px, 4vw, 42px); padding-right: clamp(22px, 4vw, 42px); }
+	.manifesto-art { min-height: clamp(300px, 36vw, 400px); }
+	.site-footer { padding-left: clamp(22px, 4vw, 42px); padding-right: clamp(22px, 4vw, 42px); }
+}
+
+@media (min-width: 1101px) {
+	.hero-copy { padding-left: clamp(42px, 4vw, 70px); padding-right: clamp(42px, 4vw, 70px); }
+	.section { padding-left: clamp(42px, 4vw, 64px); padding-right: clamp(42px, 4vw, 64px); }
+}
+
+@media (max-width: 600px) {
+	:host ::ng-deep .cart-drawer { max-width: min(100%, 510px); padding: 24px clamp(18px, 6vw, 28px); }
+	:host ::ng-deep .drawer-header h2 { font-size: clamp(42px, 13vw, 55px); }
+	:host ::ng-deep .cart-item img { height: clamp(76px, 22vw, 100px); width: clamp(68px, 19vw, 86px); }
+	:host ::ng-deep .checkout-backdrop { padding: 12px; }
+	:host ::ng-deep .checkout-modal { box-shadow: 7px 7px 0 rgba(239, 102, 77, .65); padding: 20px clamp(18px, 6vw, 28px) 32px; }
+	:host ::ng-deep .checkout-layout { gap: 42px; grid-template-columns: 1fr; padding-top: 28px; }
+	:host ::ng-deep .checkout-layout h2 { font-size: clamp(45px, 14vw, 66px); margin-bottom: 28px; }
+	:host ::ng-deep .checkout-summary { border-left: 0; border-top: 1px solid rgba(27, 28, 23, .2); padding-left: 0; padding-top: 28px; }
+	:host ::ng-deep .payment-options { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+	:host ::ng-deep .checkout-modal { padding-left: clamp(24px, 5vw, 48px); padding-right: clamp(24px, 5vw, 48px); }
+	:host ::ng-deep .checkout-layout { gap: 6%; grid-template-columns: minmax(0, 1.1fr) minmax(190px, .9fr); }
+	:host ::ng-deep .checkout-layout h2 { font-size: clamp(48px, 7vw, 70px); }
+	:host ::ng-deep .checkout-summary { padding-left: 20px; }
+}
