@@ -23,6 +23,7 @@ export class CheckoutComponent {
   protected phoneNumber = '';
   protected deliveryAddress = '';
   protected readonly savingAddress = signal(false);
+  protected readonly addressSaved = signal(false);
   protected readonly addressSaveStatus = signal('');
   protected readonly savedAddresses = this.addressBookService.addresses;
   protected readonly addressBookError = this.addressBookService.error;
@@ -49,6 +50,7 @@ export class CheckoutComponent {
   protected selectAddressCategory(category: AddressCategory): void {
     this.addressCategory = category;
     this.addressSaveStatus.set('');
+    this.addressSaved.set(false);
     const savedAddress = this.savedAddresses()[category];
     if (!savedAddress) {
       this.fullName = '';
@@ -74,15 +76,19 @@ export class CheckoutComponent {
 
     this.savingAddress.set(true);
     this.addressSaveStatus.set('');
+    this.addressSaved.set(false);
     try {
-      await this.addressBookService.save(userId, this.addressCategory, {
+      const saveMode = await this.addressBookService.save(userId, this.addressCategory, {
         name: this.fullName,
         phone: this.phoneNumber,
         address: this.deliveryAddress
       });
-      this.addressSaveStatus.set(`${this.addressCategory[0].toUpperCase()}${this.addressCategory.slice(1)} address saved.`);
+      const label = `${this.addressCategory[0].toUpperCase()}${this.addressCategory.slice(1)} address saved`;
+      this.addressSaveStatus.set(saveMode === 'cloud' ? `${label}.` : `${label} on this device.`);
+      this.addressSaved.set(true);
+      window.setTimeout(() => this.addressSaved.set(false), 2200);
     } catch (error: unknown) {
-      this.addressSaveStatus.set('We could not save this address. Please try again.');
+      this.addressSaveStatus.set(error instanceof Error ? error.message : 'We could not save this address. Please try again.');
       console.error('Saving address failed:', error);
     } finally {
       this.savingAddress.set(false);

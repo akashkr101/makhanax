@@ -36,8 +36,10 @@ export class App {
   protected readonly cartOpen = signal(false);
   protected readonly checkoutOpen = signal(false);
   protected readonly profileOpen = signal(false);
+  protected readonly profileEditing = signal(false);
   protected readonly pendingCheckout = signal(false);
   protected readonly cartNotice = signal('');
+  protected readonly loginNotice = signal(false);
   protected readonly orderConfirmation = signal(false);
   protected readonly cartItems = this.cartService.items;
   protected readonly cartItemCount = this.cartService.itemCount;
@@ -71,11 +73,21 @@ export class App {
   }
 
   protected openProfile(): void {
+    this.profileEditing.set(false);
     this.profileOpen.set(true);
   }
 
   protected closeProfile(): void {
+    this.profileEditing.set(false);
     this.profileOpen.set(false);
+  }
+
+  protected startProfileEdit(): void {
+    this.profileEditing.set(true);
+  }
+
+  protected cancelProfileEdit(): void {
+    this.profileEditing.set(false);
   }
 
   protected async saveProfile(event: Event): Promise<void> {
@@ -84,7 +96,7 @@ export class App {
     const saved = await this.authService.updateCustomerProfile(
       new FormData(form).get('displayName')?.toString() ?? ''
     );
-    if (saved) this.closeProfile();
+    if (saved) this.profileEditing.set(false);
   }
 
   protected async signOut(): Promise<void> {
@@ -132,6 +144,8 @@ export class App {
     const shouldOpenCheckout = this.pendingCheckout();
     this.pendingCheckout.set(false);
     this.authService.closeLogin();
+    this.loginNotice.set(true);
+    window.setTimeout(() => this.loginNotice.set(false), 3500);
     if (shouldOpenCheckout) this.checkoutOpen.set(true);
   }
 

@@ -12,5 +12,13 @@ export const PRODUCTS: Product[] = [
   { id: 'ready-250', name: 'Peri Peri Pop', category: 'ready-to-eat', size: '250g', price: 349, image: masalaMakhana, tone: 'yellow', description: 'Roasted masala makhana, ready straight from the pack.' },
   { id: 'ready-500', name: 'Peri Peri Pop', category: 'ready-to-eat', size: '500g', price: 649, image: masalaMakhana, tone: 'yellow', description: 'A bigger bag for movie nights.' },
   { id: 'ready-1000', name: 'Peri Peri Pop', category: 'ready-to-eat', size: '1 kg', price: 1199, image: masalaMakhana, tone: 'yellow', description: 'A bold, shareable family pack.' },
-  { id: 'ready-2000', name: 'Peri Peri Pop', category: 'ready-to-eat', size: '2 kg', price: 2199, image: masalaMakhana, tone: 'yellow', description: 'The wholesale-ready crunch supply.' }
+  { id: 'ready-2000', name: 'Peri Peri Pop', category: 'ready-to-eat', size: '2 kg', price: 2199, image: masalaMakhana, tone: 'yellow', description: 'The wholesale-ready crunch supply.' },
+  { id: 'salty-250', name: 'Salty Makhana', category: 'salty', size: '250g', price: 319, image: roastedMakhana, tone: 'sage', description: 'A clean salted crunch for everyday snacking.' },
+  { id: 'salty-500', name: 'Salty Makhana', category: 'salty', size: '500g', price: 589, image: makhanaGrains, tone: 'sage', description: 'A lightly salted sharing pack.' },
+  { id: 'salty-1000', name: 'Salty Makhana', category: 'salty', size: '1 kg', price: 1079, image: roastedMakhana, tone: 'sage', description: 'An easy crowd-pleaser for the pantry.' },
+  { id: 'salty-2000', name: 'Salty Makhana', category: 'salty', size: '2 kg', price: 1949, image: makhanaGrains, tone: 'sage', description: 'The big pack for family gatherings.' },
+  { id: 'tikha-250', name: 'Tikha Makhana', category: 'tikha', size: '250g', price: 359, image: masalaMakhana, tone: 'spice', description: 'A bold chilli kick with every crunch.' },
+  { id: 'tikha-500', name: 'Tikha Makhana', category: 'tikha', size: '500g', price: 669, image: masalaMakhana, tone: 'spice', description: 'A fiery snack for spice lovers.' },
+  { id: 'tikha-1000', name: 'Tikha Makhana', category: 'tikha', size: '1 kg', price: 1239, image: masalaMakhana, tone: 'spice', description: 'A big bold pack for sharing.' },
+  { id: 'tikha-2000', name: 'Tikha Makhana', category: 'tikha', size: '2 kg', price: 2279, image: masalaMakhana, tone: 'spice', description: 'A fiery wholesale-size supply.' }
 ];

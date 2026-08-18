@@ -38,10 +38,17 @@
 .save-address:hover:not(:disabled) { background: var(--coral); color: var(--ink); transform: translateY(-2px); }
 .save-address:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
 .save-address:disabled { cursor: wait; opacity: .6; }
+.save-address.saving .save-address-symbol { animation: save-spin .8s linear infinite; }
+.save-address.saved { background: #168244; color: #fff; }
 .save-address-symbol { border: 2px solid currentColor; display: block; height: 19px; position: relative; width: 17px; }
 .save-address-symbol::before { border-bottom: 2px solid currentColor; border-left: 2px solid currentColor; content: ''; height: 6px; left: 3px; position: absolute; top: 3px; width: 7px; }
 .save-address-symbol::after { background: currentColor; bottom: 3px; content: ''; height: 5px; left: 4px; position: absolute; width: 7px; }
+.save-address-symbol.saved { border: 0; height: 20px; width: 22px; }
+.save-address-symbol.saved::before { background: transparent; border-bottom: 3px solid currentColor; border-left: 3px solid currentColor; height: 8px; left: 3px; top: 2px; transform: rotate(-45deg); width: 16px; }
+.save-address-symbol.saved::after { display: none; }
 .address-save-status { color: var(--coral); font-size: 11px; line-height: 1.4; margin: 4px 0 0; }
+
+@keyframes save-spin { to { transform: rotate(360deg); } }
 
 .money-value {
   font-family: var(--body) !important;

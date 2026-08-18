@@ -21,6 +21,7 @@
 @if (checkoutOpen()) { <app-checkout [items]="cartItems()" (back)="checkoutOpen.set(false); cartOpen.set(true)" (orderPlaced)="finishOrder()"></app-checkout> }
 @if (!cartOpen() && !checkoutOpen() && !loginOpen() && !profileOpen()) { <button class="floating-cart" type="button" [attr.aria-label]="'Open cart, ' + cartItemCount() + ' items'" title="Open cart" (click)="cartOpen.set(true)"><span class="floating-cart-icon" aria-hidden="true"></span><span class="floating-cart-count">{{ cartItemCount() }}</span></button> }
 @if (cartNotice()) { <div class="cart-notice" role="status" aria-live="polite"><span class="cart-notice-mark">✓</span><p>{{ cartNotice() }}</p><button class="cart-notice-action" type="button" (click)="openCartFromNotice()">View cart</button><button class="cart-notice-close" type="button" aria-label="Dismiss cart confirmation" (click)="cartNotice.set('')">×</button></div> }
+@if (loginNotice()) { <div class="login-notice" role="status" aria-live="polite"><span aria-hidden="true">✓</span><div><strong>Welcome back</strong><p>You are now logged in.</p></div><button type="button" aria-label="Dismiss login confirmation" (click)="loginNotice.set(false)">×</button></div> }
 @if (orderConfirmation()) { <div class="order-toast" role="status"><strong>Order received.</strong><span>Thank you for choosing MakhanaX.</span></div> }
 
 @if (loginOpen()) {
@@ -48,13 +49,17 @@
       <h2 id="profile-title">Hello,<br><em>{{ customerProfile()?.displayName || 'snacker' }}.</em></h2>
       <p class="login-copy">Keep your profile details current for a smoother checkout experience.</p>
       @if (authError()) { <p class="login-error" role="alert">{{ authError() }}</p> }
-      <form class="otp-form" (submit)="saveProfile($event)">
-        <label for="profile-name">Your name</label>
-        <input id="profile-name" name="displayName" type="text" autocomplete="name" [value]="customerProfile()?.displayName ?? ''" required>
-        @if (customerProfile()?.email) { <p class="profile-detail"><span>Email</span>{{ customerProfile()?.email }}</p> }
-        @if (customerProfile()?.phoneNumber) { <p class="profile-detail"><span>Mobile</span>{{ customerProfile()?.phoneNumber }}</p> }
-        <button class="button button-dark" type="submit" [disabled]="authLoading()">{{ authLoading() ? 'Saving…' : 'Save profile' }} <span>↗</span></button>
-      </form>
+      @if (profileEditing()) {
+        <form class="otp-form" (submit)="saveProfile($event)">
+          <label for="profile-name">Your name</label>
+          <input id="profile-name" name="displayName" type="text" autocomplete="name" [value]="customerProfile()?.displayName ?? ''" required>
+          @if (customerProfile()?.email) { <p class="profile-detail"><span>Email</span>{{ customerProfile()?.email }}</p> }
+          @if (customerProfile()?.phoneNumber) { <p class="profile-detail"><span>Mobile</span>{{ customerProfile()?.phoneNumber }}</p> }
+          <div class="profile-edit-actions"><button class="button button-dark" type="submit" [disabled]="authLoading()">{{ authLoading() ? 'Saving…' : 'Save changes' }} <span>↗</span></button><button class="text-button" type="button" (click)="cancelProfileEdit()">Cancel</button></div>
+        </form>
+      } @else {
+        <div class="profile-view"><p class="profile-detail"><span>Your name</span>{{ customerProfile()?.displayName || 'Not added yet' }}</p>@if (customerProfile()?.email) { <p class="profile-detail"><span>Email</span>{{ customerProfile()?.email }}</p> } @if (customerProfile()?.phoneNumber) { <p class="profile-detail"><span>Mobile</span>{{ customerProfile()?.phoneNumber }}</p> }<button class="profile-edit" type="button" aria-label="Edit profile" title="Edit profile" (click)="startProfileEdit()"><span aria-hidden="true"></span></button></div>
+      }
       <button class="text-button sign-out" type="button" (click)="signOut()">Sign out</button>
     </section>
   </div>

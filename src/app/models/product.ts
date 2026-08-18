@@ -1,4 +1,4 @@
-export type MakhanaCategory = 'normal' | 'ready-to-eat';
+export type MakhanaCategory = 'normal' | 'ready-to-eat' | 'salty' | 'tikha';
 
 export interface Product {
   id: string;

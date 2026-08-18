@@ -11,10 +11,10 @@ import { CartItem, MakhanaCategory, Product } from '../../models/product';
 export class ProductCatalogComponent {
   readonly cartItems = input<CartItem[]>([]);
   protected readonly products = PRODUCTS;
-  protected readonly selectedSize = signal<Record<MakhanaCategory, string>>({ normal: '250g', 'ready-to-eat': '250g' });
+  protected readonly selectedSize = signal<Record<MakhanaCategory, string>>({ normal: '250g', 'ready-to-eat': '250g', salty: '250g', tikha: '250g' });
   protected readonly addProduct = output<Product>();
   protected readonly changeQuantity = output<{ id: string; quantity: number }>();
-  protected readonly categories: MakhanaCategory[] = ['normal', 'ready-to-eat'];
+  protected readonly categories: MakhanaCategory[] = ['normal', 'ready-to-eat', 'salty', 'tikha'];
   protected readonly sizes = ['250g', '500g', '1 kg', '2 kg'];
 
   protected selectedProduct(category: MakhanaCategory): Product {
@@ -31,6 +31,10 @@ export class ProductCatalogComponent {
 
   protected quantityFor(productId: string): number {
     return this.cartItems().find((item) => item.product.id === productId)?.quantity ?? 0;
+  }
+
+  protected categoryLabel(category: MakhanaCategory): string {
+    return { normal: 'Classic', 'ready-to-eat': 'Roasted masala', salty: 'Lightly salted', tikha: 'Extra spicy' }[category];
   }
 
   protected replaceImage(event: Event): void {

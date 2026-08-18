@@ -37,6 +37,17 @@
 .otp-form .button { margin-top: 18px; }
 .login-legal { margin-top: 18px; }
 .profile-modal .profile-detail { font-size: 13px; }
+.profile-view { position: relative; }
+.profile-view .profile-detail:first-child { margin-top: 20px; }
+.profile-edit { align-items: center; background: var(--ink); border: 0; border-radius: 50%; bottom: 0; color: var(--paper); cursor: pointer; display: inline-flex; height: 42px; justify-content: center; position: absolute; right: 0; transition: background .2s ease, transform .2s ease; width: 42px; }
+.profile-edit:hover { background: var(--coral); color: var(--ink); transform: translateY(-2px); }
+.profile-edit:focus-visible { outline: 2px solid var(--coral); outline-offset: 3px; }
+.profile-edit span { border-bottom: 2px solid currentColor; display: block; height: 13px; position: relative; transform: rotate(-45deg); width: 17px; }
+.profile-edit span::before { background: currentColor; content: ''; height: 4px; position: absolute; right: 0; top: -1px; width: 4px; }
+.profile-edit span::after { border-left: 2px solid currentColor; content: ''; height: 8px; left: 2px; position: absolute; top: 2px; }
+.profile-edit-actions { align-items: center; display: flex; gap: 20px; }
+.profile-edit-actions .button { margin-top: 22px; }
+.profile-edit-actions .text-button { margin-top: 22px; }
 .site-header { transition: padding .3s ease, transform .28s ease; }
 .site-header.header-hidden { pointer-events: none; transform: translateY(calc(-100% - 4px)); }
 
@@ -77,4 +88,6 @@
 
 .floating-cart { align-items: center; background: var(--ink); border: 0; border-radius: 50%; bottom: 24px; box-shadow: 4px 4px 0 var(--coral); color: var(--paper); cursor: pointer; display: inline-flex; height: 52px; justify-content: center; padding: 0; position: fixed; right: 24px; transition: background .2s ease, transform .2s ease; width: 52px; z-index: 18; } .floating-cart:hover { background: var(--coral); color: var(--ink); transform: translateY(-3px); } .floating-cart:focus-visible { outline: 2px solid var(--coral); outline-offset: 3px; } .floating-cart-icon { border-bottom: 2px solid currentColor; border-right: 2px solid currentColor; display: block; height: 12px; margin: -2px 2px 0 0; position: relative; transform: skewX(-10deg); width: 17px; } .floating-cart-icon::before { border-left: 2px solid currentColor; border-top: 2px solid currentColor; content: ''; height: 8px; left: 0; position: absolute; top: 0; width: 15px; } .floating-cart-icon::after { background: currentColor; border-radius: 50%; box-shadow: 11px 0 0 currentColor; content: ''; height: 3px; left: 2px; position: absolute; top: 14px; transform: skewX(10deg); width: 3px; } .floating-cart-count { align-items: center; background: var(--yellow); border-radius: 50%; color: var(--ink); display: inline-flex; font: 700 10px var(--body); height: 18px; justify-content: center; position: absolute; right: -4px; top: -4px; width: 18px; } .cart-notice { bottom: 88px; } @media (max-width: 600px) { .floating-cart { bottom: 16px; right: 16px; } .cart-notice { bottom: 78px; } }
 
-.range.section { padding-bottom: clamp(56px, 7vw, 96px); }
+.range.section { padding-bottom: 0; }
+
+.login-notice { align-items: center; animation: modal-in .28s ease both; background: #168244; bottom: 88px; box-shadow: 5px 5px 0 rgba(22, 130, 68, .25); color: #fff; display: flex; gap: 12px; max-width: min(330px, calc(100vw - 32px)); padding: 13px 14px; position: fixed; right: 24px; z-index: 45; } .login-notice > span { align-items: center; background: #d9f6e4; border-radius: 50%; color: #168244; display: inline-flex; font-weight: 700; height: 24px; justify-content: center; width: 24px; } .login-notice strong { display: block; font-size: 13px; } .login-notice p { font-size: 11px; margin: 2px 0 0; } .login-notice button { background: transparent; border: 0; color: #fff; cursor: pointer; font-size: 19px; line-height: 1; margin-left: 4px; padding: 0; } @media (max-width: 600px) { .login-notice { bottom: 78px; left: 16px; right: 16px; } }

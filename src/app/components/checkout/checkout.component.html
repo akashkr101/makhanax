@@ -17,7 +17,7 @@
               <button class="address-category" type="button" [class.active]="addressCategory === 'flat'" [class.saved]="savedAddresses().flat" [attr.aria-pressed]="addressCategory === 'flat'" (click)="selectAddressCategory('flat')"><span class="address-category-icon" aria-hidden="true">&#9641;</span>Flat @if (savedAddresses().flat) { <small>Saved</small> }</button>
               <button class="address-category" type="button" [class.active]="addressCategory === 'other'" [class.saved]="savedAddresses().other" [attr.aria-pressed]="addressCategory === 'other'" (click)="selectAddressCategory('other')"><span class="address-category-icon" aria-hidden="true">&#9670;</span>Other @if (savedAddresses().other) { <small>Saved</small> }</button>
             </div>
-            <button class="save-address" type="button" aria-label="Save selected address" title="Save selected address" [disabled]="savingAddress()" (click)="saveAddress()"><span class="save-address-symbol" aria-hidden="true"></span></button>
+            <button class="save-address" type="button" [class.saving]="savingAddress()" [class.saved]="addressSaved()" [attr.aria-label]="addressSaved() ? 'Address saved' : 'Save selected address'" [attr.title]="addressSaved() ? 'Address saved' : 'Save selected address'" [disabled]="savingAddress()" (click)="saveAddress()"><span class="save-address-symbol" [class.saved]="addressSaved()" aria-hidden="true"></span></button>
           </div>
           @if (addressSaveStatus()) { <p class="address-save-status" role="status">{{ addressSaveStatus() }}</p> }
           <label for="checkout-name">Full name</label>
