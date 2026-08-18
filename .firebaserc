@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "makhanax-001"
-  }
+    "default": "makhanax-01"
+  },
+  "targets": {},
+  "etags": {}
 }

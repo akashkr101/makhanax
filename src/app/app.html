@@ -5,7 +5,7 @@
   <div class="header-actions"><button class="cart-link" type="button" (click)="cartOpen.set(true)">Cart <b>{{ cartItemCount() }}</b></button><a class="header-action" href="#contact">Wholesale &amp; bulk orders <span>↗</span></a>@if (isAuthenticated()) { <button class="profile-icon" type="button" aria-label="Open your profile" title="Your profile" (click)="openProfile()"><span aria-hidden="true"></span></button> } @else { <button class="login-link" type="button" (click)="openLogin()">Login <span>↗</span></button> }</div>
 </header>
 <main id="top">
-  <section class="hero"><div class="hero-rail"><span>M</span><span>A</span><span>K</span><span>H</span><span>A</span><span>N</span><span>A</span><small>FIELD NOTES / 001</small></div><div class="hero-copy"><span class="hero-number">01</span><p class="eyebrow">Goodness, popped</p><h1>Snack<br><em>lighter.</em><br>Live brighter.</h1><p class="hero-intro">Thoughtfully roasted makhana from Bihar for the moments in between. Big on crunch, easy on everything else.</p><a class="button button-dark" href="#range">Meet the range <span>↓</span></a><p class="hero-footnote">Fox nuts · Roasted in India</p></div><div class="hero-image-wrap"><div class="hero-sticker">100%<br><span>joyful</span></div><div class="image-index">BATCH<br><strong>07</strong></div><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Foxnut_Makhana_-_Nawada_District_-_Bihar_-_1.jpg/1920px-Foxnut_Makhana_-_Nawada_District_-_Bihar_-_1.jpg" alt="Lightly roasted puffed makhana from Bihar" (error)="replaceImage($event)"><p class="image-caption">Lightly roasted puffed makhana</p></div></section>
+  <section class="hero"><div class="hero-rail"><span>M</span><span>A</span><span>K</span><span>H</span><span>A</span><span>N</span><span>A</span><small>FIELD NOTES / 001</small></div><div class="hero-copy"><span class="hero-sparkle sparkle-a" aria-hidden="true">✳</span><span class="hero-sparkle sparkle-b" aria-hidden="true">✳</span><span class="hero-sparkle sparkle-c" aria-hidden="true">✳</span><span class="hero-number">01</span><p class="eyebrow">Goodness, popped</p><h1>Snack<br><em>lighter.</em><br>Live brighter.</h1><p class="hero-intro">Thoughtfully roasted makhana from Bihar for the moments in between. Big on crunch, easy on everything else.</p><a class="button button-dark" href="#range">Meet the range <span>↓</span></a><p class="hero-footnote">Fox nuts · Roasted in India</p></div><div class="hero-image-wrap"><div class="hero-sticker">100%<br><span>joyful</span></div><div class="image-index">BATCH<br><strong>07</strong></div><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Foxnut_Makhana_-_Nawada_District_-_Bihar_-_1.jpg/1920px-Foxnut_Makhana_-_Nawada_District_-_Bihar_-_1.jpg" alt="Lightly roasted puffed makhana from Bihar" (error)="replaceImage($event)"><p class="image-caption">Lightly roasted puffed makhana</p></div></section>
   <section class="ticker" aria-label="MakhanaX highlights"><span>Plant-powered</span><i>✳</i><span>Feel-good crunch</span><i>✳</i><span>Made in India</span><i>✳</i><span>Plant-powered</span></section>
   <section class="proof-row"><div><strong>01</strong><span>Lightly roasted</span></div><div><strong>02</strong><span>Simple ingredients</span></div><div><strong>03</strong><span>Big on crunch</span></div><div><strong>04</strong><span>Made for sharing</span></div></section>
   <section class="field-note"><div class="field-note-stamp">PXP<br><strong>001</strong></div><div class="field-note-copy"><p class="eyebrow">A little field note</p><p>Grown in freshwater ponds, roasted by hand, and popped into a snack with a little more <em>character.</em></p></div><div class="field-note-side">Makhana is also called fox nut.<br>From the ponds of Bihar to your favourite bowl.</div></section>
@@ -32,7 +32,7 @@
       @if (authError()) { <p class="login-error" role="alert">{{ authError() }}</p> }
       @if (otpSent()) {
         <p class="eyebrow">Step 02 / Verify</p><h2 id="login-title">Check your<br><em>messages.</em></h2><p class="login-copy">Enter the six-digit code sent to <strong>{{ phoneNumber() }}</strong>.</p><form class="otp-form" (submit)="verifyOtp($event)"><label for="otp">One-time password</label><input id="otp" name="otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required><button class="button button-dark" type="submit" [disabled]="authLoading()">{{ authLoading() ? 'Verifying…' : 'Verify OTP' }} <span>↗</span></button></form><button class="text-button" type="button" (click)="editPhone()">Change phone number</button><button class="text-button" type="button" (click)="requestOtp($event)">Resend code</button><button class="text-button" type="button" (click)="useEmailLogin()">Use email and password</button>
-      } @else if (emailAuthMode()) {
+      } @else if (emailAuthOpen()) {
         <p class="eyebrow">{{ emailAuthMode() === 'signIn' ? 'Member access' : 'Create account' }}</p><h2 id="login-title">{{ emailAuthMode() === 'signIn' ? 'Welcome\nback.' : 'Join the\ncrunch.' }}</h2><p class="login-copy">{{ emailAuthMode() === 'signIn' ? 'Sign in securely with your email address and password.' : 'Create an account to make checkout faster next time.' }}</p><form class="otp-form" (submit)="authenticateWithEmail($event)"><label for="email-login">Email address</label><input id="email-login" name="email" type="email" autocomplete="email" placeholder="you@example.com" required><label for="password-login">Password</label><input id="password-login" name="password" type="password" [attr.autocomplete]="emailAuthMode() === 'signIn' ? 'current-password' : 'new-password'" minlength="8" required><button class="button button-dark" type="submit" [disabled]="authLoading()">{{ authLoading() ? 'Please wait…' : emailAuthMode() === 'signIn' ? 'Sign in' : 'Create account' }} <span>↗</span></button></form><button class="text-button" type="button" (click)="useEmailLogin(emailAuthMode() === 'signIn' ? 'register' : 'signIn')">{{ emailAuthMode() === 'signIn' ? 'Create an account' : 'Already have an account? Sign in' }}</button><button class="text-button" type="button" (click)="usePhoneLogin()">Use mobile OTP instead</button>
       } @else {
         <p class="eyebrow">Member access</p><h2 id="login-title">Good snacks.<br><em>Good company.</em></h2><p class="login-copy">Log in with your phone number. We’ll send a one-time password to keep your account secure.</p><form class="otp-form" (submit)="requestOtp($event)"><label for="phone">Mobile number</label><div class="phone-fields"><select id="country-code" name="countryCode" aria-label="Country code" [value]="countryCode()" (change)="countryCode.set($any($event.target).value)">@for (country of countryCodes; track country.code) {<option [value]="country.code">{{ country.code }} {{ country.name }}</option>}</select><input id="phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="98765 43210" [value]="localPhoneNumber()" (input)="localPhoneNumber.set($any($event.target).value)" required></div><button class="button button-coral" type="submit" [disabled]="authLoading()">{{ authLoading() ? 'Sending…' : 'Send OTP' }} <span>↗</span></button></form><button class="text-button" type="button" (click)="useEmailLogin()">Use email and password</button><p class="login-legal">By continuing, you agree to receive a one-time verification message.</p>
@@ -45,22 +45,60 @@
   <div class="login-backdrop" role="presentation" (click)="closeProfile()">
     <section class="login-modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-title" (click)="$event.stopPropagation()">
       <button class="modal-close" type="button" aria-label="Close profile" (click)="closeProfile()">×</button>
-      <p class="eyebrow">Your MakhanaX account</p>
-      <h2 id="profile-title">Hello,<br><em>{{ customerProfile()?.displayName || 'snacker' }}.</em></h2>
-      <p class="login-copy">Keep your profile details current for a smoother checkout experience.</p>
-      @if (authError()) { <p class="login-error" role="alert">{{ authError() }}</p> }
-      @if (profileEditing()) {
-        <form class="otp-form" (submit)="saveProfile($event)">
-          <label for="profile-name">Your name</label>
-          <input id="profile-name" name="displayName" type="text" autocomplete="name" [value]="customerProfile()?.displayName ?? ''" required>
-          @if (customerProfile()?.email) { <p class="profile-detail"><span>Email</span>{{ customerProfile()?.email }}</p> }
-          @if (customerProfile()?.phoneNumber) { <p class="profile-detail"><span>Mobile</span>{{ customerProfile()?.phoneNumber }}</p> }
-          <div class="profile-edit-actions"><button class="button button-dark" type="submit" [disabled]="authLoading()">{{ authLoading() ? 'Saving…' : 'Save changes' }} <span>↗</span></button><button class="text-button" type="button" (click)="cancelProfileEdit()">Cancel</button></div>
-        </form>
+      @if (profileTab() === 'menu') {
+        <p class="eyebrow">Your MakhanaX account</p>
+        <div class="profile-avatar-row"><span class="profile-avatar" aria-hidden="true"><span></span></span><h2 id="profile-title">{{ customerProfile()?.displayName || 'Snacker' }}</h2></div>
+        @if (authError()) { <p class="login-error" role="alert">{{ authError() }}</p> }
+        <nav class="profile-menu" aria-label="Account sections">
+          <button type="button" (click)="selectProfileTab('profile')"><span>Profile</span><span class="profile-menu-arrow" aria-hidden="true">→</span></button>
+          <button type="button" (click)="selectProfileTab('orders')"><span>Order history</span><span class="profile-menu-arrow" aria-hidden="true">→</span></button>
+          <button type="button" (click)="selectProfileTab('contact')"><span>Contact us</span><span class="profile-menu-arrow" aria-hidden="true">→</span></button>
+          @if (role() === 'ADMIN') { <button type="button" (click)="goToAdminDashboard()"><span>Admin dashboard</span><span class="profile-menu-arrow" aria-hidden="true">→</span></button> }
+        </nav>
       } @else {
-        <div class="profile-view"><p class="profile-detail"><span>Your name</span>{{ customerProfile()?.displayName || 'Not added yet' }}</p>@if (customerProfile()?.email) { <p class="profile-detail"><span>Email</span>{{ customerProfile()?.email }}</p> } @if (customerProfile()?.phoneNumber) { <p class="profile-detail"><span>Mobile</span>{{ customerProfile()?.phoneNumber }}</p> }<button class="profile-edit" type="button" aria-label="Edit profile" title="Edit profile" (click)="startProfileEdit()"><span aria-hidden="true"></span></button></div>
+        <button class="profile-back" type="button" (click)="backToProfileMenu()"><span aria-hidden="true">←</span> Back to account</button>
+        @if (authError()) { <p class="login-error" role="alert">{{ authError() }}</p> }
+        @if (profileTab() === 'profile') {
+          <h2 id="profile-title" class="profile-section-title">Profile</h2>
+          @if (profileEditing()) {
+            <form class="otp-form" (submit)="saveProfile($event)">
+              <label for="profile-name">Your name</label>
+              <input id="profile-name" name="displayName" type="text" autocomplete="name" [value]="customerProfile()?.displayName ?? ''" required>
+              @if (customerProfile()?.email) { <p class="profile-detail"><span>Email</span>{{ customerProfile()?.email }}</p> }
+              @if (customerProfile()?.phoneNumber) { <p class="profile-detail"><span>Mobile</span>{{ customerProfile()?.phoneNumber }}</p> }
+              <div class="profile-edit-actions"><button class="button button-dark" type="submit" [disabled]="authLoading()">{{ authLoading() ? 'Saving…' : 'Save changes' }} <span>↗</span></button><button class="text-button" type="button" (click)="cancelProfileEdit()">Cancel</button></div>
+            </form>
+          } @else {
+            <div class="profile-view"><p class="profile-detail"><span>Your name</span>{{ customerProfile()?.displayName || 'Not added yet' }}</p>@if (customerProfile()?.email) { <p class="profile-detail"><span>Email</span>{{ customerProfile()?.email }}</p> } @if (customerProfile()?.phoneNumber) { <p class="profile-detail"><span>Mobile</span>{{ customerProfile()?.phoneNumber }}</p> }<button class="profile-edit" type="button" aria-label="Edit profile" title="Edit profile" (click)="startProfileEdit()">✎</button></div>
+          }
+        } @else if (profileTab() === 'orders') {
+          <h2 id="profile-title" class="profile-section-title">Order history</h2>
+          @if (ordersError()) { <p class="login-error" role="alert">{{ ordersError() }}</p> }
+          @if (orders().length === 0) {
+            <div class="empty-orders"><span aria-hidden="true">✳</span><p>You haven't placed an order yet.</p></div>
+          } @else {
+            <div class="order-history-list">
+              @for (order of orders(); track order.id) {
+                <article class="order-history-item">
+                  <div class="order-history-top"><span>{{ formatOrderDate(order.placedAt) }}</span><strong>{{ formatPrice(order.total) }}</strong></div>
+                  <span class="order-status-badge" [class]="order.status.toLowerCase()">{{ order.status }}</span>
+                  <ul>@for (item of order.items; track item.name + item.size) { <li>{{ item.quantity }} × {{ item.name }} <small>{{ item.size }}</small></li> }</ul>
+                </article>
+              }
+            </div>
+          }
+        } @else {
+          <h2 id="profile-title" class="profile-section-title">Contact us</h2>
+          <div class="contact-us-tab">
+            <p class="login-copy">For wholesale, collaborations, or order help, reach out any time.</p>
+            <a class="contact-line" href="mailto:hello@makhanax.in"><span>Email</span>hello@makhanax.in</a>
+            <a class="contact-line" href="tel:+919876543210"><span>Call</span>+91 98765 43210</a>
+            <p class="contact-line"><span>Hours</span>Mon–Sat · 10:00–18:00 IST</p>
+          </div>
+        }
       }
       <button class="text-button sign-out" type="button" (click)="signOut()">Sign out</button>
     </section>
   </div>
 }
+

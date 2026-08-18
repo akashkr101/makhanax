@@ -1,0 +1,140 @@
+<div class="admin-shell">
+  <aside class="admin-sidebar">
+    <div class="admin-brand"><span class="brand-mark">✳</span> MakhanaX <em>Admin</em></div>
+    <nav>
+      <button type="button" [class.active]="section() === 'overview'" (click)="selectSection('overview')">Dashboard</button>
+      <button type="button" [class.active]="section() === 'products'" (click)="selectSection('products')">Products</button>
+      <button type="button" [class.active]="section() === 'orders'" (click)="selectSection('orders')">Orders</button>
+      <button type="button" [class.active]="section() === 'customers'" (click)="selectSection('customers')">Customers</button>
+      <button type="button" [class.active]="section() === 'reports'" (click)="selectSection('reports')">Reports</button>
+    </nav>
+    <div class="admin-sidebar-footer">
+      <button type="button" class="admin-link" (click)="backToStore()">← Back to store</button>
+      <button type="button" class="admin-link" (click)="signOut()">Sign out</button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    @if (section() === 'overview') {
+      <h1>Admin dashboard</h1>
+      <div class="admin-stats">
+        <div class="admin-stat"><span>Today's orders</span><strong>{{ formatPrice(todaysRevenue()) }}</strong></div>
+        <div class="admin-stat"><span>Orders</span><strong>{{ todaysOrderCount() }}</strong></div>
+        <div class="admin-stat"><span>Pending</span><strong>{{ pendingOrderCount() }}</strong></div>
+        <div class="admin-stat"><span>Products</span><strong>{{ productService.products().length }}</strong></div>
+        <div class="admin-stat"><span>Low stock</span><strong>{{ lowStockCount() }}</strong></div>
+      </div>
+      <h2 class="admin-subheading">Recent orders</h2>
+      <table class="admin-table">
+        <thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead>
+        <tbody>
+          @for (order of recentOrders(); track order.id) {
+            <tr>
+              <td>#{{ order.id.slice(-4) }}</td>
+              <td>{{ order.customerName }}</td>
+              <td>{{ formatPrice(order.total) }}</td>
+              <td>{{ order.paymentMethod | uppercase }}</td>
+              <td><span class="status-badge" [class]="order.status.toLowerCase()">{{ order.status }}</span></td>
+            </tr>
+          }
+          @empty { <tr><td colspan="5">No orders yet.</td></tr> }
+        </tbody>
+      </table>
+    }
+
+    @if (section() === 'products') {
+      <h1>Products</h1>
+      <form class="admin-form" (submit)="saveProduct($event)">
+        <div class="admin-form-grid">
+          <label>Name<input type="text" [(ngModel)]="productForm.name" name="name" required></label>
+          <label>Category<select [(ngModel)]="productForm.category" name="category">@for (category of categories; track category) {<option [value]="category">{{ category }}</option>}</select></label>
+          <label>Size<input type="text" [(ngModel)]="productForm.size" name="size" required></label>
+          <label>Price (₹)<input type="number" [(ngModel)]="productForm.price" name="price" min="0" required></label>
+          <label>Stock<input type="number" [(ngModel)]="productForm.stock" name="stock" min="0"></label>
+          <label>Image URL<input type="text" [(ngModel)]="productForm.image" name="image"></label>
+        </div>
+        <label class="admin-form-full">Description<textarea rows="2" [(ngModel)]="productForm.description" name="description"></textarea></label>
+        @if (productFormError()) { <p class="admin-error">{{ productFormError() }}</p> }
+        <div class="admin-form-actions">
+          <button class="admin-button" type="submit" [disabled]="savingProduct()">{{ editingProductId() ? 'Save changes' : 'Add product' }}</button>
+          @if (editingProductId()) { <button class="admin-link" type="button" (click)="newProduct()">Cancel edit</button> }
+        </div>
+      </form>
+
+      <table class="admin-table">
+        <thead><tr><th>Product</th><th>Category</th><th>Size</th><th>Price</th><th>Stock</th><th></th></tr></thead>
+        <tbody>
+          @for (product of productService.products(); track product.id) {
+            <tr>
+              <td>{{ product.name }}</td>
+              <td>{{ product.category }}</td>
+              <td>{{ product.size }}</td>
+              <td>{{ formatPrice(product.price) }}</td>
+              <td><input class="stock-input" type="number" min="0" [value]="product.stock ?? 0" (change)="updateStock(product, $any($event.target).value)"></td>
+              <td class="admin-row-actions"><button type="button" (click)="editProduct(product)">Edit</button><button type="button" (click)="deleteProduct(product.id)">Delete</button></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+
+    @if (section() === 'orders') {
+      <h1>Orders</h1>
+      <table class="admin-table">
+        <thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Placed</th><th>Status</th></tr></thead>
+        <tbody>
+          @for (order of orderHistoryService.allOrders(); track order.id) {
+            <tr>
+              <td>#{{ order.id.slice(-4) }}</td>
+              <td>{{ order.customerName }}</td>
+              <td>{{ order.items.length }}</td>
+              <td>{{ formatPrice(order.total) }}</td>
+              <td>{{ formatDate(order.placedAt) }}</td>
+              <td>
+                <select [value]="order.status" (change)="changeOrderStatus(order.id, $any($event.target).value)">
+                  @for (status of statuses; track status) { <option [value]="status">{{ status }}</option> }
+                </select>
+              </td>
+            </tr>
+          }
+          @empty { <tr><td colspan="6">No orders yet.</td></tr> }
+        </tbody>
+      </table>
+    }
+
+    @if (section() === 'customers') {
+      <h1>Customers</h1>
+      <table class="admin-table">
+        <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+        <tbody>
+          @for (customer of customerDirectoryService.customers(); track customer.id) {
+            <tr>
+              <td>{{ customer.id.slice(0, 6) }}</td>
+              <td>{{ customer.displayName || '—' }}</td>
+              <td>{{ customer.email || customer.phoneNumber || '—' }}</td>
+              <td><span class="status-badge" [class]="customer.role.toLowerCase()">{{ customer.role }}</span></td>
+            </tr>
+          }
+          @empty { <tr><td colspan="4">No customers yet.</td></tr> }
+        </tbody>
+      </table>
+    }
+
+    @if (section() === 'reports') {
+      <h1>Reports</h1>
+      <div class="admin-stats">
+        <div class="admin-stat"><span>Total revenue</span><strong>{{ formatPrice(totalRevenue()) }}</strong></div>
+        <div class="admin-stat"><span>Total orders</span><strong>{{ orderHistoryService.allOrders().length }}</strong></div>
+        <div class="admin-stat"><span>Average order value</span><strong>{{ formatPrice(averageOrderValue()) }}</strong></div>
+      </div>
+      <h2 class="admin-subheading">Top-selling products</h2>
+      <table class="admin-table">
+        <thead><tr><th>Product</th><th>Units sold</th></tr></thead>
+        <tbody>
+          @for (entry of topProducts(); track entry[0]) { <tr><td>{{ entry[0] }}</td><td>{{ entry[1] }}</td></tr> }
+          @empty { <tr><td colspan="2">No sales yet.</td></tr> }
+        </tbody>
+      </table>
+    }
+  </main>
+</div>

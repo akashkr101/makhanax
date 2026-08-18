@@ -4,6 +4,26 @@
   padding: 24px;
 }
 
+/* Hero entrance polish: drifting sparkles, a breathing sticker, and a slow image zoom. */
+.hero-copy { overflow: hidden; }
+.hero-sparkle { color: var(--coral); font-size: 20px; opacity: .55; position: absolute; z-index: 2; }
+.sparkle-a { animation: sparkle-drift-a 7s ease-in-out infinite; right: 14%; top: 12%; }
+.sparkle-b { animation: sparkle-drift-b 9s ease-in-out infinite; font-size: 14px; right: 26%; top: 60%; }
+.sparkle-c { animation: sparkle-drift-a 6s ease-in-out infinite reverse; font-size: 12px; right: 8%; top: 74%; }
+.hero-sticker { animation: sticker-breathe 4.5s ease-in-out infinite; }
+.hero-image-wrap img { animation: hero-image-zoom 16s ease-in-out infinite alternate; }
+.button-dark span { display: inline-block; transition: transform .25s ease; }
+.button-dark:hover span { transform: translateY(3px); }
+
+@keyframes sparkle-drift-a { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-10px) rotate(18deg); } }
+@keyframes sparkle-drift-b { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(8px) rotate(-14deg); } }
+@keyframes sticker-breathe { 0%, 100% { transform: rotate(12deg) scale(1); } 50% { transform: rotate(12deg) scale(1.06); } }
+@keyframes hero-image-zoom { from { transform: scale(1); } to { transform: scale(1.08); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-sparkle, .hero-sticker, .hero-image-wrap img { animation: none; }
+}
+
 .login-modal {
   box-shadow: 8px 8px 0 var(--modal-offset) !important;
   max-height: calc(100dvh - 48px);
@@ -37,17 +57,55 @@
 .otp-form .button { margin-top: 18px; }
 .login-legal { margin-top: 18px; }
 .profile-modal .profile-detail { font-size: 13px; }
+.profile-avatar-row { align-items: center; display: flex; gap: 14px; margin: 14px 0 4px; }
+.profile-avatar { align-items: center; background: var(--ink); border-radius: 50%; display: inline-flex; flex-shrink: 0; height: 46px; justify-content: center; width: 46px; }
+.profile-avatar span { display: block; height: 19px; position: relative; width: 19px; }
+.profile-avatar span::before { background: var(--paper); border-radius: 50%; content: ''; height: 7px; left: 6px; position: absolute; top: 0; width: 7px; }
+.profile-avatar span::after { background: var(--paper); border-radius: 10px 10px 4px 4px; bottom: 0; content: ''; height: 9px; left: 2px; position: absolute; width: 15px; }
+.profile-avatar-row h2 { font-size: clamp(24px, 3vw, 30px) !important; margin: 0 !important; }
 .profile-view { position: relative; }
 .profile-view .profile-detail:first-child { margin-top: 20px; }
-.profile-edit { align-items: center; background: var(--ink); border: 0; border-radius: 50%; bottom: 0; color: var(--paper); cursor: pointer; display: inline-flex; height: 42px; justify-content: center; position: absolute; right: 0; transition: background .2s ease, transform .2s ease; width: 42px; }
-.profile-edit:hover { background: var(--coral); color: var(--ink); transform: translateY(-2px); }
-.profile-edit:focus-visible { outline: 2px solid var(--coral); outline-offset: 3px; }
-.profile-edit span { border-bottom: 2px solid currentColor; display: block; height: 13px; position: relative; transform: rotate(-45deg); width: 17px; }
-.profile-edit span::before { background: currentColor; content: ''; height: 4px; position: absolute; right: 0; top: -1px; width: 4px; }
-.profile-edit span::after { border-left: 2px solid currentColor; content: ''; height: 8px; left: 2px; position: absolute; top: 2px; }
+.profile-edit { align-items: center; background: transparent; border: 0; color: var(--ink); cursor: pointer; display: inline-flex; font-size: 18px; height: 30px; justify-content: center; position: absolute; right: 0; top: 0; transition: color .2s ease; width: 30px; }
+.profile-edit:hover { color: var(--coral); }
+.profile-edit:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
 .profile-edit-actions { align-items: center; display: flex; gap: 20px; }
 .profile-edit-actions .button { margin-top: 22px; }
 .profile-edit-actions .text-button { margin-top: 22px; }
+
+.profile-menu { display: flex; flex-direction: column; gap: 0; margin: 12px 0 0; }
+.profile-menu button { align-items: center; background: transparent; border: 0; color: var(--ink); cursor: pointer; display: flex; font: 700 15px/1.2 var(--body); justify-content: space-between; margin: 0; padding: 6px 4px; text-align: left; width: 100%; }
+.profile-menu button span { line-height: 1.2; margin: 0; }
+.profile-menu button:hover { color: var(--coral); }
+.profile-menu button:focus-visible { outline: 2px solid var(--coral); outline-offset: -2px; }
+.profile-menu-arrow { color: var(--coral); font-size: 16px; transition: transform .2s ease; }
+.profile-menu button:hover .profile-menu-arrow { transform: translateX(4px); }
+
+.profile-back { background: transparent; border: 0; color: rgba(27, 28, 23, .6); cursor: pointer; display: inline-flex; font: 700 11px var(--body); gap: 8px; letter-spacing: .06em; margin-bottom: 14px; padding: 0; text-transform: uppercase; }
+.profile-back:hover { color: var(--ink); }
+.profile-back span { color: var(--coral); font-size: 14px; }
+.profile-section-title { font-size: clamp(30px, 4vw, 42px) !important; margin: 0 0 18px !important; }
+
+.empty-orders { color: rgba(27, 28, 23, .6); padding: 10px 0 6px; text-align: center; }
+.empty-orders span { color: var(--coral); display: block; font-size: 28px; margin-bottom: 8px; }
+.empty-orders p { font-size: 13px; margin: 0; }
+
+.order-history-list { display: flex; flex-direction: column; gap: 12px; max-height: 320px; overflow-y: auto; }
+.order-history-item { background: rgba(27, 28, 23, .04); border-radius: 10px; padding: 14px 16px; }
+.order-history-top { align-items: center; display: flex; font-size: 12px; justify-content: space-between; }
+.order-history-top span { color: rgba(27, 28, 23, .6); }
+.order-history-top strong { font-family: var(--body); font-size: 15px; }
+.order-status-badge { border-radius: 6px; display: inline-block; font: 700 9px var(--body); letter-spacing: .03em; margin-top: 8px; padding: 3px 8px; text-transform: uppercase; }
+.order-status-badge.new { background: #dbe7fe; color: #1d4ed8; }
+.order-status-badge.confirmed { background: #fef3c7; color: #92400e; }
+.order-status-badge.shipped { background: #e0e7ff; color: #4338ca; }
+.order-status-badge.delivered { background: #dcfce7; color: #166534; }
+.order-status-badge.cancelled { background: #fee2e2; color: #b91c1c; }
+.order-history-item ul { list-style: none; margin: 8px 0 0; padding: 0; }
+.order-history-item li { font-size: 12px; padding: 3px 0; }
+.order-history-item li small { color: rgba(27, 28, 23, .55); margin-left: 6px; text-transform: uppercase; }
+
+.contact-us-tab .contact-line { border-bottom: 1px solid rgba(27, 28, 23, .18); color: var(--ink); display: flex; flex-direction: column; font-size: 14px; gap: 4px; padding: 12px 0; text-decoration: none; }
+.contact-us-tab .contact-line span { color: var(--coral); font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .site-header { transition: padding .3s ease, transform .28s ease; }
 .site-header.header-hidden { pointer-events: none; transform: translateY(calc(-100% - 4px)); }
 

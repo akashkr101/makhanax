@@ -1,10 +1,12 @@
 import { Component, computed, HostListener, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { CartDrawerComponent } from './components/cart-drawer/cart-drawer.component';
 import { CheckoutComponent } from './components/checkout/checkout.component';
 import { CustomerCounterComponent } from './components/customer-counter/customer-counter.component';
 import { ProductCatalogComponent } from './components/product-catalog/product-catalog.component';
 import { AuthService, EmailAuthMode } from './core/services/auth.service';
 import { CartService } from './core/services/cart.service';
+import { OrderHistoryService } from './core/services/order-history.service';
 import { Product } from './models/product';
 
 @Component({
@@ -16,6 +18,9 @@ import { Product } from './models/product';
 export class App {
   private readonly authService = inject(AuthService);
   private readonly cartService = inject(CartService);
+  private readonly orderHistoryService = inject(OrderHistoryService);
+  private readonly router = inject(Router);
+  protected readonly role = this.authService.role;
   protected readonly loginOpen = this.authService.loginOpen;
   protected readonly phoneNumber = this.authService.phoneNumber;
   protected readonly localPhoneNumber = signal('');
@@ -28,6 +33,7 @@ export class App {
     { code: '+971', name: 'UAE' }
   ];
   protected readonly otpSent = computed(() => this.authService.step() === 'verification');
+  protected readonly emailAuthOpen = computed(() => this.authService.step() === 'email');
   protected readonly authError = this.authService.error;
   protected readonly authLoading = this.authService.loading;
   protected readonly emailAuthMode = this.authService.emailMode;
@@ -37,6 +43,9 @@ export class App {
   protected readonly checkoutOpen = signal(false);
   protected readonly profileOpen = signal(false);
   protected readonly profileEditing = signal(false);
+  protected readonly profileTab = signal<'menu' | 'profile' | 'orders' | 'contact'>('menu');
+  protected readonly orders = this.orderHistoryService.orders;
+  protected readonly ordersError = this.orderHistoryService.error;
   protected readonly pendingCheckout = signal(false);
   protected readonly cartNotice = signal('');
   protected readonly loginNotice = signal(false);
@@ -74,12 +83,38 @@ export class App {
 
   protected openProfile(): void {
     this.profileEditing.set(false);
+    this.profileTab.set('menu');
     this.profileOpen.set(true);
+    const userId = this.authService.userId();
+    if (userId) void this.orderHistoryService.load(userId);
   }
 
   protected closeProfile(): void {
     this.profileEditing.set(false);
     this.profileOpen.set(false);
+  }
+
+  protected selectProfileTab(tab: 'profile' | 'orders' | 'contact'): void {
+    this.profileTab.set(tab);
+    this.profileEditing.set(false);
+  }
+
+  protected goToAdminDashboard(): void {
+    this.closeProfile();
+    void this.router.navigate(['/admin']);
+  }
+
+  protected backToProfileMenu(): void {
+    this.profileTab.set('menu');
+    this.profileEditing.set(false);
+  }
+
+  protected formatOrderDate(isoDate: string): string {
+    return new Date(isoDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  protected formatPrice(price: number): string {
+    return `₹${price.toLocaleString('en-IN')}`;
   }
 
   protected startProfileEdit(): void {

@@ -2,6 +2,7 @@ import { Component, effect, inject, input, output, signal } from '@angular/core'
 import { FormsModule } from '@angular/forms';
 import { AddressBookService, AddressCategory } from '../../core/services/address-book.service';
 import { AuthService } from '../../core/services/auth.service';
+import { OrderHistoryService } from '../../core/services/order-history.service';
 import { CartItem } from '../../models/product';
 
 @Component({
@@ -14,6 +15,7 @@ import { CartItem } from '../../models/product';
 export class CheckoutComponent {
   private readonly authService = inject(AuthService);
   private readonly addressBookService = inject(AddressBookService);
+  private readonly orderHistoryService = inject(OrderHistoryService);
   readonly items = input<CartItem[]>([]);
   readonly back = output<void>();
   readonly orderPlaced = output<void>();
@@ -108,6 +110,16 @@ export class CheckoutComponent {
       } catch (error: unknown) {
         console.error('Saving delivery address failed:', error);
       }
+      await this.orderHistoryService.record(userId, this.fullName || 'Customer', {
+        total: this.total(),
+        paymentMethod: this.paymentMethod,
+        items: this.items().map((item) => ({
+          name: item.product.name,
+          size: item.product.size,
+          quantity: item.quantity,
+          price: item.product.price
+        }))
+      });
     }
     this.orderPlaced.emit();
   }

@@ -1,10 +1,12 @@
 import { Injectable, signal } from '@angular/core';
 import { FirebaseApp, initializeApp } from 'firebase/app';
 import { Auth, ConfirmationResult, RecaptchaVerifier, createUserWithEmailAndPassword, getAuth, onAuthStateChanged, sendEmailVerification, signInWithEmailAndPassword, signInWithPhoneNumber, signOut, updateProfile } from 'firebase/auth';
+import { doc, getDoc, getFirestore, setDoc } from 'firebase/firestore';
 import { environment } from '../../../environments/environment';
 
 export type AuthStep = 'phone' | 'verification' | 'email' | 'verified';
 export type EmailAuthMode = 'signIn' | 'register';
+export type UserRole = 'ADMIN' | 'CUSTOMER';
 export interface CustomerProfile {
   displayName: string;
   email: string;
@@ -22,9 +24,11 @@ export class AuthService {
   readonly isAuthenticated = signal(false);
   readonly userId = signal('');
   readonly customerProfile = signal<CustomerProfile | null>(null);
+  readonly role = signal<UserRole | null>(null);
 
   private readonly firebaseApp: FirebaseApp = initializeApp(environment.firebase);
   private readonly auth: Auth = getAuth(this.firebaseApp);
+  private readonly firestore = getFirestore(this.firebaseApp);
   private confirmationResult?: ConfirmationResult;
   private recaptchaVerifier?: RecaptchaVerifier;
 
@@ -37,8 +41,30 @@ export class AuthService {
         email: user.email ?? '',
         phoneNumber: user.phoneNumber ?? ''
       } : null);
-      if (user) this.step.set('verified');
+      if (user) {
+        this.step.set('verified');
+        void this.syncCustomerDirectory(user.uid, user.displayName ?? '', user.email ?? '', user.phoneNumber ?? '');
+      } else {
+        this.role.set(null);
+      }
     });
+  }
+
+  private async syncCustomerDirectory(userId: string, displayName: string, email: string, phoneNumber: string): Promise<void> {
+    try {
+      const customerDoc = doc(this.firestore, 'customers', userId);
+      const snapshot = await getDoc(customerDoc);
+      const existingRole = snapshot.data()?.['role'] as UserRole | undefined;
+      await setDoc(customerDoc, {
+        displayName, email, phoneNumber,
+        role: existingRole ?? 'CUSTOMER',
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      this.role.set(existingRole ?? 'CUSTOMER');
+    } catch (error: unknown) {
+      console.error('Syncing customer directory failed:', error);
+      this.role.set('CUSTOMER');
+    }
   }
 
   openLogin(): void {
@@ -190,6 +216,7 @@ export class AuthService {
   private destroyRecaptcha(): void {
     this.recaptchaVerifier?.clear();
     this.recaptchaVerifier = undefined;
+    document.getElementById('recaptcha-container')?.replaceChildren();
   }
 
   private normalizePhoneNumber(countryCode: string, phoneNumber: string): string | null {
@@ -202,7 +229,7 @@ export class AuthService {
   private getRequestError(error: unknown): string {
     const code = this.getFirebaseErrorCode(error);
     switch (code) {
-      case 'auth/operation-not-allowed': return 'Phone sign-in is not enabled in Firebase Console.';
+      case 'auth/operation-not-allowed': return 'Phone sign-in is unavailable for this project. Enable the Phone provider and allow your country under Firebase Console > Authentication > Settings > SMS regions.';
       case 'auth/unauthorized-domain': return 'This website domain is not authorized in Firebase Authentication settings.';
       case 'auth/invalid-app-credential': return 'Firebase reCAPTCHA verification failed. Refresh the page and try again.';
       case 'auth/too-many-requests': return 'Too many OTP requests. Please wait and try again later.';

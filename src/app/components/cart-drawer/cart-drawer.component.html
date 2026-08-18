@@ -18,6 +18,23 @@
         </article>
       }
     </div>
-    <div class="cart-summary"><div><span>Estimated total</span><strong class="cart-money">{{ formatPrice(total()) }}</strong></div><small>Taxes and shipping are calculated at checkout.</small><button class="checkout-button" type="button" (click)="checkout.emit()"><span class="checkout-icon">→</span><span class="checkout-label">Proceed to checkout</span><strong class="cart-money">{{ formatPrice(total()) }}</strong><span class="checkout-arrow">↗</span></button></div>
+    <div class="cart-summary">
+      <div class="coupon-section">
+        @if (appliedCoupon()) {
+          <div class="coupon-applied"><span class="coupon-tag">{{ appliedCoupon()?.code }}</span><span>{{ appliedCoupon()?.label }}</span><button type="button" aria-label="Remove coupon" (click)="removeCoupon()">×</button></div>
+        } @else {
+          <form class="coupon-form" (submit)="applyCoupon($event)">
+            <input type="text" placeholder="Enter coupon code" aria-label="Coupon code" [value]="couponInput()" (input)="couponInput.set($any($event.target).value)">
+            <button type="submit">Apply</button>
+          </form>
+          @if (couponError()) { <p class="coupon-error">{{ couponError() }}</p> }
+        }
+      </div>
+      <div><span>Subtotal</span><strong class="cart-money">{{ formatPrice(subtotal()) }}</strong></div>
+      @if (appliedCoupon()) { <div class="coupon-discount-row"><span>Coupon discount</span><strong class="cart-money">−{{ formatPrice(discount()) }}</strong></div> }
+      <div class="cart-total-row"><span>Estimated total</span><strong class="cart-money">{{ formatPrice(total()) }}</strong></div>
+      <small>Taxes and shipping are calculated at checkout.</small>
+      <button class="checkout-button" type="button" (click)="checkout.emit()"><span class="checkout-icon">→</span><span class="checkout-label">Proceed to checkout</span><strong class="cart-money">{{ formatPrice(total()) }}</strong><span class="checkout-arrow">↗</span></button>
+    </div>
   }
 </aside>

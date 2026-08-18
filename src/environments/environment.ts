@@ -6,12 +6,12 @@ export const environment: AppConfig = {
   otpProvider: 'firebase',
   enableCashOnDelivery: true,
   firebase: {
-    apiKey: 'AIzaSyDL6__w3h0YX86f1qaSeNQxlHwNYTcZ6Q0',
-    authDomain: 'makhanax-001.firebaseapp.com',
-    projectId: 'makhanax-001',
-    storageBucket: 'makhanax-001.firebasestorage.app',
-    messagingSenderId: '388424428971',
-    appId: '1:388424428971:web:675717ee505ff5496f76ee',
-    measurementId: 'G-5PLV1XKXLE'
+    apiKey: 'AIzaSyBAhvhO4V2D5ej5YuF2SFLSgYHSUD-3240',
+    authDomain: 'makhanax-01.firebaseapp.com',
+    projectId: 'makhanax-01',
+    storageBucket: 'makhanax-01.firebasestorage.app',
+    messagingSenderId: '647187637605',
+    appId: '1:647187637605:web:792bb28e8ba0f3fc56ad8c',
+    measurementId: 'G-GWCMFVHXN3'
   }
 };
