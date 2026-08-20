@@ -64,9 +64,7 @@
             <form class="otp-form" (submit)="saveProfile($event)">
               <label for="profile-name">Your name</label>
               <input id="profile-name" name="displayName" type="text" autocomplete="name" [value]="customerProfile()?.displayName ?? ''" required>
-              @if (customerProfile()?.email) { <p class="profile-detail"><span>Email</span>{{ customerProfile()?.email }}</p> }
-              @if (customerProfile()?.phoneNumber) { <p class="profile-detail"><span>Mobile</span>{{ customerProfile()?.phoneNumber }}</p> }
-              <div class="profile-edit-actions"><button class="button button-dark" type="submit" [disabled]="authLoading()">{{ authLoading() ? 'Saving…' : 'Save changes' }} <span>↗</span></button><button class="text-button" type="button" (click)="cancelProfileEdit()">Cancel</button></div>
+              <div class="profile-edit-actions"><button class="button button-dark" type="submit" [disabled]="authLoading()">{{ authLoading() ? 'Saving…' : 'Save name' }} <span>↗</span></button><button class="text-button" type="button" (click)="cancelProfileEdit()">Cancel</button></div>
             </form>
           } @else {
             <div class="profile-view"><p class="profile-detail"><span>Your name</span>{{ customerProfile()?.displayName || 'Not added yet' }}</p>@if (customerProfile()?.email) { <p class="profile-detail"><span>Email</span>{{ customerProfile()?.email }}</p> } @if (customerProfile()?.phoneNumber) { <p class="profile-detail"><span>Mobile</span>{{ customerProfile()?.phoneNumber }}</p> }<button class="profile-edit" type="button" aria-label="Edit profile" title="Edit profile" (click)="startProfileEdit()">✎</button></div>

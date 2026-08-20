@@ -25,12 +25,14 @@ export class AuthService {
   readonly userId = signal('');
   readonly customerProfile = signal<CustomerProfile | null>(null);
   readonly role = signal<UserRole | null>(null);
+  readonly roleLoading = signal(false);
 
   private readonly firebaseApp: FirebaseApp = initializeApp(environment.firebase);
   private readonly auth: Auth = getAuth(this.firebaseApp);
   private readonly firestore = getFirestore(this.firebaseApp);
   private confirmationResult?: ConfirmationResult;
   private recaptchaVerifier?: RecaptchaVerifier;
+  private roleResolution: Promise<void> = Promise.resolve();
 
   constructor() {
     onAuthStateChanged(this.auth, (user) => {
@@ -43,11 +45,20 @@ export class AuthService {
       } : null);
       if (user) {
         this.step.set('verified');
-        void this.syncCustomerDirectory(user.uid, user.displayName ?? '', user.email ?? '', user.phoneNumber ?? '');
+        this.roleLoading.set(true);
+        this.roleResolution = this.syncCustomerDirectory(user.uid, user.displayName ?? '', user.email ?? '', user.phoneNumber ?? '')
+          .finally(() => this.roleLoading.set(false));
       } else {
         this.role.set(null);
+        this.roleLoading.set(false);
+        this.roleResolution = Promise.resolve();
       }
     });
+  }
+
+  async waitForRole(): Promise<UserRole | null> {
+    await this.roleResolution;
+    return this.role();
   }
 
   private async syncCustomerDirectory(userId: string, displayName: string, email: string, phoneNumber: string): Promise<void> {
