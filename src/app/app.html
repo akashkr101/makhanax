@@ -74,14 +74,14 @@
           <h2 id="profile-title" class="profile-section-title">Order history</h2>
           @if (ordersError()) { <p class="login-error" role="alert">{{ ordersError() }}</p> }
           @if (orders().length === 0) {
-            <div class="empty-orders"><span aria-hidden="true">✳</span><p>You haven't placed an order yet.</p></div>
+            <div class="empty-orders"><span aria-hidden="true">✳</span><h3>No orders yet</h3><p>Your confirmed snack runs will appear here after checkout.</p><a class="button button-dark" href="#range" (click)="closeProfile()">Browse products <span>↓</span></a></div>
           } @else {
             <div class="order-history-list">
               @for (order of orders(); track order.id) {
                 <article class="order-history-item">
-                  <div class="order-history-top"><span>{{ formatOrderDate(order.placedAt) }}</span><strong>{{ formatPrice(order.total) }}</strong></div>
-                  <span class="order-status-badge" [class]="order.status.toLowerCase()">{{ order.status }}</span>
-                  <ul>@for (item of order.items; track item.name + item.size) { <li>{{ item.quantity }} × {{ item.name }} <small>{{ item.size }}</small></li> }</ul>
+                  <div class="order-history-top"><div><span>Order #{{ order.id.slice(-6) }}</span><strong>{{ formatOrderDate(order.placedAt) }}</strong></div><span class="order-status-badge" [class]="order.status.toLowerCase()">{{ order.status }}</span></div>
+                  <ul class="order-history-items">@for (item of order.items; track item.name + item.size) { <li><div><strong>{{ item.name }}</strong><small>{{ item.size }} · Qty {{ item.quantity }}</small></div><span>{{ formatPrice(item.price * item.quantity) }}</span></li> }</ul>
+                  <div class="order-history-footer"><span>{{ order.paymentMethod | uppercase }}</span><strong>{{ formatPrice(order.total) }}</strong></div>
                 </article>
               }
             </div>

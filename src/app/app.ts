@@ -1,3 +1,4 @@
+import { UpperCasePipe } from '@angular/common';
 import { Component, OnInit, computed, HostListener, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CartDrawerComponent } from './components/cart-drawer/cart-drawer.component';
@@ -12,7 +13,7 @@ import { Product } from './models/product';
 
 @Component({
   selector: 'app-root',
-  imports: [ProductCatalogComponent, CartDrawerComponent, CheckoutComponent, CustomerCounterComponent],
+  imports: [ProductCatalogComponent, CartDrawerComponent, CheckoutComponent, CustomerCounterComponent, UpperCasePipe],
   templateUrl: './app.html',
   styleUrls: ['./app.scss', './app-overrides.scss'],
 })

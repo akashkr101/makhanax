@@ -32,7 +32,9 @@ export class ProductService {
           return cloudProduct ? { ...product, ...cloudProduct, id: product.id, category: product.category, size: product.size } : product;
         });
         const defaultProductIds = new Set(PRODUCTS.map((product) => product.id));
-        const customProducts = cloudProducts.filter((product) => !defaultProductIds.has(product.id));
+        const customProducts = cloudProducts
+          .filter((product) => !defaultProductIds.has(product.id))
+          .map((product) => ({ ...product, size: product.size?.trim() || '250g' }));
         this.products.set([...defaultProducts, ...customProducts]);
       }
       this.error.set('');
@@ -45,9 +47,10 @@ export class ProductService {
   }
 
   async addProduct(product: Omit<Product, 'id'>): Promise<void> {
+    const productToSave = { ...product, size: product.size.trim() || '250g' };
     const id = await this.createProductDocumentId(product.name);
-    await setDoc(doc(this.firestore, 'products', id), product);
-    this.products.update((products) => [...products, { ...product, id }]);
+    await setDoc(doc(this.firestore, 'products', id), productToSave);
+    this.products.update((products) => [...products, { ...productToSave, id }]);
   }
 
   async updateProduct(id: string, changes: Partial<Product>): Promise<void> {

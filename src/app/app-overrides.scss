@@ -85,24 +85,31 @@
 .profile-back span { color: var(--coral); font-size: 14px; }
 .profile-section-title { font-size: clamp(30px, 4vw, 42px) !important; margin: 0 0 18px !important; }
 
-.empty-orders { color: rgba(27, 28, 23, .6); padding: 10px 0 6px; text-align: center; }
-.empty-orders span { color: var(--coral); display: block; font-size: 28px; margin-bottom: 8px; }
-.empty-orders p { font-size: 13px; margin: 0; }
+.empty-orders { background: rgba(27, 28, 23, .035); color: rgba(27, 28, 23, .68); padding: 24px 18px; text-align: center; }
+.empty-orders span { color: var(--coral); display: block; font-size: 30px; margin-bottom: 8px; }
+.empty-orders h3 { font-size: 22px; margin: 0 0 8px; }
+.empty-orders p { font-size: 13px; line-height: 1.45; margin: 0 auto; max-width: 280px; }
+.empty-orders .button { border: 0; margin-top: 18px; }
 
-.order-history-list { display: flex; flex-direction: column; gap: 12px; max-height: 320px; overflow-y: auto; }
-.order-history-item { background: rgba(27, 28, 23, .04); border-radius: 10px; padding: 14px 16px; }
-.order-history-top { align-items: center; display: flex; font-size: 12px; justify-content: space-between; }
-.order-history-top span { color: rgba(27, 28, 23, .6); }
-.order-history-top strong { font-family: var(--body); font-size: 15px; }
-.order-status-badge { border-radius: 6px; display: inline-block; font: 700 9px var(--body); letter-spacing: .03em; margin-top: 8px; padding: 3px 8px; text-transform: uppercase; }
+.order-history-list { display: flex; flex-direction: column; gap: 14px; max-height: 420px; overflow-y: auto; padding-right: 4px; }
+.order-history-item { background: #fffaf0; border: 1px solid rgba(27, 28, 23, .1); border-radius: 8px; box-shadow: 4px 4px 0 rgba(233, 102, 80, .14); padding: 16px; }
+.order-history-top { align-items: flex-start; display: flex; font-size: 12px; gap: 16px; justify-content: space-between; }
+.order-history-top span { color: var(--coral); display: block; font-size: 10px; font-weight: 800; letter-spacing: .08em; margin-bottom: 4px; text-transform: uppercase; }
+.order-history-top strong { color: var(--ink); font-family: var(--display); font-size: 16px; }
+.order-status-badge { border-radius: 999px; display: inline-block; flex-shrink: 0; font: 700 9px var(--body); letter-spacing: .05em; padding: 6px 10px; text-transform: uppercase; }
 .order-status-badge.new { background: #dbe7fe; color: #1d4ed8; }
 .order-status-badge.confirmed { background: #fef3c7; color: #92400e; }
 .order-status-badge.shipped { background: #e0e7ff; color: #4338ca; }
 .order-status-badge.delivered { background: #dcfce7; color: #166534; }
 .order-status-badge.cancelled { background: #fee2e2; color: #b91c1c; }
-.order-history-item ul { list-style: none; margin: 8px 0 0; padding: 0; }
-.order-history-item li { font-size: 12px; padding: 3px 0; }
-.order-history-item li small { color: rgba(27, 28, 23, .55); margin-left: 6px; text-transform: uppercase; }
+.order-history-items { list-style: none; margin: 14px 0 0; padding: 0; }
+.order-history-items li { align-items: center; border-top: 1px solid rgba(27, 28, 23, .1); display: flex; font-size: 12px; gap: 12px; justify-content: space-between; padding: 10px 0; }
+.order-history-items li strong { display: block; font-size: 13px; }
+.order-history-items li small { color: rgba(27, 28, 23, .55); display: block; font-size: 10px; margin-top: 3px; text-transform: uppercase; }
+.order-history-items li span { font-weight: 800; white-space: nowrap; }
+.order-history-footer { align-items: center; background: rgba(27, 28, 23, .045); border-radius: 6px; display: flex; justify-content: space-between; margin-top: 8px; padding: 10px 12px; }
+.order-history-footer span { color: rgba(27, 28, 23, .58); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.order-history-footer strong { color: var(--ink); font-size: 17px; }
 
 .contact-us-tab .contact-line { border-bottom: 1px solid rgba(27, 28, 23, .18); color: var(--ink); display: flex; flex-direction: column; font-size: 14px; gap: 4px; padding: 12px 0; text-decoration: none; }
 .contact-us-tab .contact-line span { color: var(--coral); font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }

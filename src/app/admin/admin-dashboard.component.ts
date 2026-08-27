@@ -342,8 +342,8 @@ export class AdminDashboardComponent implements OnInit {
 
   protected async saveProduct(event: Event): Promise<void> {
     event.preventDefault();
-    if (!this.productForm.name.trim() || this.productForm.price <= 0) {
-      this.productFormError.set('Enter a product name and a price greater than zero.');
+    if (!this.productForm.name.trim() || !this.productForm.size.trim() || this.productForm.price <= 0) {
+      this.productFormError.set('Enter a product name, pack size, and a price greater than zero.');
       return;
     }
     this.savingProduct.set(true);

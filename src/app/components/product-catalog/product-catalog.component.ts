@@ -16,6 +16,7 @@ export class ProductCatalogComponent implements OnInit {
   readonly cartItems = input<CartItem[]>([]);
   protected readonly products = this.productService.products;
   protected readonly customProducts = computed(() => this.products().filter((product) => !defaultProductIds.has(product.id)));
+  protected readonly featuredProducts = computed(() => this.categories.map((category) => this.selectedProduct(category)));
   protected readonly selectedSize = signal<Record<MakhanaCategory, string>>({ normal: '250g', 'ready-to-eat': '250g', salty: '250g', tikha: '250g' });
   protected readonly addProduct = output<Product>();
   protected readonly changeQuantity = output<{ id: string; quantity: number }>();
