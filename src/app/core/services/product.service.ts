@@ -18,7 +18,12 @@ export class ProductService {
     try {
       const snapshot = await getDocs(collection(this.firestore, 'products'));
       if (!snapshot.empty) {
-        this.products.set(snapshot.docs.map((productDoc) => ({ id: productDoc.id, ...productDoc.data() } as Product)));
+        const cloudProducts = snapshot.docs.map((productDoc) => ({ id: productDoc.id, ...productDoc.data() } as Product));
+        const cloudById = new Map(cloudProducts.map((product) => [product.id, product]));
+        this.products.set(PRODUCTS.map((product) => {
+          const cloudProduct = cloudById.get(product.id);
+          return cloudProduct ? { ...product, ...cloudProduct, id: product.id, category: product.category, size: product.size } : product;
+        }));
       }
       this.error.set('');
     } catch (error: unknown) {
@@ -47,5 +52,40 @@ export class ProductService {
   async setStock(id: string, stock: number): Promise<void> {
     await updateDoc(doc(this.firestore, 'products', id), { stock });
     this.products.update((products) => products.map((product) => product.id === id ? { ...product, stock } : product));
+  }
+
+  searchByName(query: string): Product[] {
+    const lowerQuery = query.toLowerCase();
+    return this.products().filter((product) =>
+      product.name.toLowerCase().includes(lowerQuery) ||
+      product.description.toLowerCase().includes(lowerQuery)
+    );
+  }
+
+  filterByCategory(category: string): Product[] {
+    if (!category) return this.products();
+    return this.products().filter((product) => product.category === category);
+  }
+
+  filterByPriceRange(minPrice: number, maxPrice: number): Product[] {
+    return this.products().filter((product) => product.price >= minPrice && product.price <= maxPrice);
+  }
+
+  sortByPrice(ascending: boolean = true): Product[] {
+    return [...this.products()].sort((a, b) => ascending ? a.price - b.price : b.price - a.price);
+  }
+
+  sortByName(ascending: boolean = true): Product[] {
+    return [...this.products()].sort((a, b) =>
+      ascending ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+    );
+  }
+
+  getProductById(id: string): Product | undefined {
+    return this.products().find((product) => product.id === id);
+  }
+
+  getAvailableProducts(): Product[] {
+    return this.products().filter((product) => (product.stock ?? 0) > 0);
   }
 }

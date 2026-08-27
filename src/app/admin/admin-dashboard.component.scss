@@ -37,6 +37,45 @@
 .admin-stat span { color: rgba(27, 28, 23, .6); display: block; font-size: 11px; letter-spacing: .04em; margin-bottom: 8px; text-transform: uppercase; }
 .admin-stat strong { color: var(--ink); font: 700 22px var(--body); }
 
+.admin-chart-grid { display: grid; gap: 14px; grid-template-columns: 1.45fr 1fr; margin-top: 14px; }
+.reports-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.chart-card { background: var(--paper); border: 1px solid rgba(27, 28, 23, .06); border-radius: 10px; box-shadow: 0 1px 3px rgba(27, 28, 23, .08); min-width: 0; overflow: hidden; padding: 18px; }
+.chart-heading { align-items: start; display: flex; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.chart-heading span { color: var(--coral); display: block; font-size: 10px; font-weight: 700; letter-spacing: .08em; margin-bottom: 5px; text-transform: uppercase; }
+.chart-heading h2 { color: var(--ink); font: 700 18px var(--display); margin: 0; }
+.chart-heading strong { color: var(--ink); font: 700 18px var(--body); white-space: nowrap; }
+.trend-chart { display: grid; gap: 12px; }
+.trend-svg { background: linear-gradient(180deg, rgba(27, 28, 23, .025), rgba(27, 28, 23, 0)); border-radius: 8px; display: block; height: 240px; width: 100%; }
+.trend-grid { stroke: rgba(27, 28, 23, .08); stroke-width: 1; }
+.trend-area { fill: rgba(241, 94, 70, .14); }
+.trend-line { fill: none; stroke: var(--coral); stroke-linecap: round; stroke-linejoin: round; stroke-width: 4; }
+.trend-point { fill: var(--paper); stroke: var(--coral); stroke-width: 4; }
+.trend-value { fill: var(--ink); font: 700 13px var(--body); }
+.trend-label { fill: rgba(27, 28, 23, .62); font: 700 11px var(--body); }
+.trend-summary { display: grid; gap: 8px; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.trend-summary span { background: rgba(27, 28, 23, .035); border-radius: 8px; color: rgba(27, 28, 23, .58); display: grid; font-size: 11px; gap: 2px; padding: 8px; }
+.trend-summary span.active { background: rgba(241, 94, 70, .1); color: var(--ink); }
+.trend-summary b { color: rgba(27, 28, 23, .72); font-size: 10px; text-transform: uppercase; }
+.status-chart, .horizontal-chart { display: grid; gap: 13px; }
+.status-row { align-items: center; display: grid; gap: 10px; grid-template-columns: minmax(110px, 1fr) 34px; }
+.status-row div { align-items: center; color: var(--ink); display: flex; font-size: 12px; font-weight: 700; gap: 8px; }
+.status-row strong { color: var(--ink); font-size: 13px; text-align: right; }
+.status-dot { background: #dbe7fe; border-radius: 50%; display: inline-flex; height: 9px; width: 9px; }
+.status-dot.confirmed { background: #facc15; }
+.status-dot.shipped { background: #818cf8; }
+.status-dot.delivered { background: #22c55e; }
+.status-dot.cancelled { background: #ef4444; }
+.status-meter { background: rgba(27, 28, 23, .08); border-radius: 999px; display: block; grid-column: 1 / -1; height: 8px; overflow: hidden; }
+.status-meter span { background: var(--ink); border-radius: inherit; display: block; height: 100%; }
+.horizontal-row { display: grid; gap: 8px; }
+.horizontal-meta { align-items: baseline; display: flex; justify-content: space-between; gap: 16px; }
+.horizontal-meta span { color: var(--ink); font-size: 13px; font-weight: 700; }
+.horizontal-meta strong, .horizontal-row small { color: rgba(27, 28, 23, .6); font-size: 11px; }
+.horizontal-track { background: rgba(27, 28, 23, .08); border-radius: 999px; display: block; height: 11px; overflow: hidden; }
+.horizontal-track span { background: var(--ink); border-radius: inherit; display: block; height: 100%; }
+.horizontal-track.coral span { background: var(--coral); }
+.chart-empty { color: rgba(27, 28, 23, .6); font-size: 13px; margin: 0; }
+
 .admin-table { background: var(--paper); border-collapse: collapse; border-radius: 10px; overflow: hidden; width: 100%; }
 .admin-table th { background: rgba(27, 28, 23, .04); color: rgba(27, 28, 23, .6); font-size: 10px; letter-spacing: .05em; padding: 10px 12px; text-align: left; text-transform: uppercase; }
 .admin-table td { border-top: 1px solid rgba(27, 28, 23, .08); color: var(--ink); font-size: 13px; padding: 10px 12px; }
@@ -68,6 +107,7 @@
   .admin-sidebar { flex-direction: row; flex-wrap: wrap; }
   .admin-sidebar nav { flex-direction: row; flex-wrap: wrap; }
   .admin-stats { grid-template-columns: repeat(2, 1fr); }
+  .admin-chart-grid, .reports-grid { grid-template-columns: 1fr; }
   .admin-form-grid { grid-template-columns: 1fr; }
   .admin-main { padding: 20px; }
 }

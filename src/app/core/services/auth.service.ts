@@ -89,6 +89,8 @@ export class AuthService {
   }
 
   async requestOtp(countryCode: string, phoneNumber: string): Promise<boolean> {
+    if (this.loading()) return false;
+
     const formattedPhoneNumber = this.normalizePhoneNumber(countryCode, phoneNumber);
     if (!formattedPhoneNumber) {
       this.error.set('Enter a valid mobile number. Example: +91 98765 43210 or 9876543210.');
@@ -232,7 +234,9 @@ export class AuthService {
 
   private normalizePhoneNumber(countryCode: string, phoneNumber: string): string | null {
     const code = countryCode.replace(/\D/g, '');
-    const digitsOnly = phoneNumber.replace(/\D/g, '');
+    let digitsOnly = phoneNumber.replace(/\D/g, '');
+    if (digitsOnly.startsWith(code)) digitsOnly = digitsOnly.slice(code.length);
+    if (digitsOnly.startsWith('0')) digitsOnly = digitsOnly.slice(1);
     if (code.length < 1 || digitsOnly.length < 6 || digitsOnly.length > 12) return null;
     return `+${code}${digitsOnly}`;
   }
@@ -243,9 +247,12 @@ export class AuthService {
       case 'auth/operation-not-allowed': return 'Phone sign-in is unavailable for this project. Enable the Phone provider and allow your country under Firebase Console > Authentication > Settings > SMS regions.';
       case 'auth/unauthorized-domain': return 'This website domain is not authorized in Firebase Authentication settings.';
       case 'auth/invalid-app-credential': return 'Firebase reCAPTCHA verification failed. Refresh the page and try again.';
+      case 'auth/captcha-check-failed': return 'Firebase could not verify this browser. Disable blockers, refresh the page, and try again.';
+      case 'auth/network-request-failed': return 'The OTP request could not reach Firebase. Check your internet connection and try again.';
       case 'auth/too-many-requests': return 'Too many OTP requests. Please wait and try again later.';
       case 'auth/quota-exceeded': return 'Firebase SMS quota has been exceeded for this project.';
       case 'auth/invalid-phone-number': return 'Firebase rejected this phone number. Use a valid number such as +91 98765 43210.';
+      case 'auth/missing-phone-number': return 'Enter a mobile number before requesting an OTP.';
       default: return 'We could not send the OTP. Check Firebase Phone Auth settings and try again.';
     }
   }

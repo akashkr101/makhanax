@@ -9,6 +9,11 @@ import { ProductService } from '../core/services/product.service';
 import { MakhanaCategory, Product } from '../models/product';
 
 type AdminSection = 'overview' | 'products' | 'orders' | 'customers' | 'reports';
+type RevenueBar = { label: string; value: number; height: number; formattedValue: string };
+type RevenuePoint = { label: string; value: number; formattedValue: string; x: number; y: number };
+type StatusSummary = { status: OrderStatus; count: number; percentage: number };
+type CategoryStockSummary = { category: MakhanaCategory; stock: number; productCount: number; percentage: number };
+type TopProductSummary = { name: string; units: number; width: number };
 
 const emptyProductForm = (): Omit<Product, 'id'> => ({
   name: '', category: 'normal', size: '250g', price: 0, image: '', tone: 'cream', description: '', stock: 0
@@ -71,6 +76,74 @@ export class AdminDashboardComponent implements OnInit {
     }
     return [...unitsByName.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
   });
+  protected readonly revenueBars = computed<RevenueBar[]>(() => {
+    const days = Array.from({ length: 7 }, (_, index) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - index));
+      return date;
+    });
+    const revenueByDay = new Map(days.map((date) => [date.toDateString(), 0]));
+    for (const order of this.orderHistoryService.allOrders()) {
+      const key = new Date(order.placedAt).toDateString();
+      if (revenueByDay.has(key)) revenueByDay.set(key, (revenueByDay.get(key) ?? 0) + order.total);
+    }
+    const maxRevenue = Math.max(...revenueByDay.values(), 1);
+    return days.map((date) => {
+      const value = revenueByDay.get(date.toDateString()) ?? 0;
+      return {
+        label: date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+        value,
+        height: Math.max(6, Math.round((value / maxRevenue) * 100)),
+        formattedValue: this.formatPrice(value)
+      };
+    });
+  });
+  protected readonly revenueTrend = computed(() => {
+    const bars = this.revenueBars();
+    const maxValue = Math.max(...bars.map((bar) => bar.value), 1);
+    const width = 640;
+    const top = 28;
+    const bottom = 172;
+    const left = 34;
+    const right = width - 24;
+    const step = (right - left) / Math.max(bars.length - 1, 1);
+    const points: RevenuePoint[] = bars.map((bar, index) => ({
+      label: bar.label,
+      value: bar.value,
+      formattedValue: bar.formattedValue,
+      x: Math.round(left + index * step),
+      y: Math.round(bottom - (bar.value / maxValue) * (bottom - top))
+    }));
+    const linePoints = points.map((point) => `${point.x},${point.y}`).join(' ');
+    const areaPoints = `${left},${bottom} ${linePoints} ${right},${bottom}`;
+    return { points, linePoints, areaPoints, bottom };
+  });
+  protected readonly orderStatusChart = computed<StatusSummary[]>(() => {
+    const orders = this.orderHistoryService.allOrders();
+    const totalOrders = Math.max(orders.length, 1);
+    return this.statuses.map((status) => {
+      const count = orders.filter((order) => order.status === status).length;
+      return { status, count, percentage: Math.round((count / totalOrders) * 100) };
+    });
+  });
+  protected readonly stockByCategory = computed<CategoryStockSummary[]>(() => {
+    const totals = this.categories.map((category) => {
+      const products = this.productService.products().filter((product) => product.category === category);
+      return {
+        category,
+        productCount: products.length,
+        stock: products.reduce((sum, product) => sum + (product.stock ?? 0), 0),
+        percentage: 0
+      };
+    });
+    const maxStock = Math.max(...totals.map((entry) => entry.stock), 1);
+    return totals.map((entry) => ({ ...entry, percentage: Math.round((entry.stock / maxStock) * 100) }));
+  });
+  protected readonly topProductBars = computed<TopProductSummary[]>(() => {
+    const topProducts = this.topProducts();
+    const maxUnits = Math.max(...topProducts.map((entry) => entry[1]), 1);
+    return topProducts.map(([name, units]) => ({ name, units, width: Math.round((units / maxUnits) * 100) }));
+  });
 
   ngOnInit(): void {
     void this.productService.load();
@@ -97,6 +170,10 @@ export class AdminDashboardComponent implements OnInit {
 
   protected formatDate(isoDate: string): string {
     return new Date(isoDate).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  }
+
+  protected categoryLabel(category: MakhanaCategory): string {
+    return { normal: 'Classic', 'ready-to-eat': 'Ready to eat', salty: 'Salty', tikha: 'Tikha' }[category];
   }
 
   protected async changeOrderStatus(orderId: string, status: string): Promise<void> {

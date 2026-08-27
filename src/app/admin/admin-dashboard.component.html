@@ -24,6 +24,42 @@
         <div class="admin-stat"><span>Products</span><strong>{{ productService.products().length }}</strong></div>
         <div class="admin-stat"><span>Low stock</span><strong>{{ lowStockCount() }}</strong></div>
       </div>
+      <div class="admin-chart-grid">
+        <section class="chart-card chart-card-wide" aria-labelledby="revenue-chart-title">
+          <div class="chart-heading"><div><span>Last 7 days</span><h2 id="revenue-chart-title">Revenue trend</h2></div><strong>{{ formatPrice(totalRevenue()) }}</strong></div>
+          <div class="trend-chart" aria-label="Revenue by day">
+            <svg class="trend-svg" viewBox="0 0 640 220" role="img" aria-labelledby="revenue-chart-title">
+              <line class="trend-grid" x1="34" y1="52" x2="616" y2="52"></line>
+              <line class="trend-grid" x1="34" y1="100" x2="616" y2="100"></line>
+              <line class="trend-grid" x1="34" y1="148" x2="616" y2="148"></line>
+              <polygon class="trend-area" [attr.points]="revenueTrend().areaPoints"></polygon>
+              <polyline class="trend-line" [attr.points]="revenueTrend().linePoints"></polyline>
+              @for (point of revenueTrend().points; track point.label) {
+                <circle class="trend-point" [attr.cx]="point.x" [attr.cy]="point.y" r="5"></circle>
+                @if (point.value > 0) { <text class="trend-value" [attr.x]="point.x" [attr.y]="point.y - 12" text-anchor="middle">{{ point.formattedValue }}</text> }
+                <text class="trend-label" [attr.x]="point.x" y="204" text-anchor="middle">{{ point.label }}</text>
+              }
+            </svg>
+            <div class="trend-summary">
+              @for (point of revenueTrend().points; track point.label) {
+                <span [class.active]="point.value > 0"><b>{{ point.label }}</b>{{ point.formattedValue }}</span>
+              }
+            </div>
+          </div>
+        </section>
+        <section class="chart-card" aria-labelledby="status-chart-title">
+          <div class="chart-heading"><div><span>Pipeline</span><h2 id="status-chart-title">Order status</h2></div></div>
+          <div class="status-chart">
+            @for (entry of orderStatusChart(); track entry.status) {
+              <div class="status-row">
+                <div><span class="status-dot" [class]="entry.status.toLowerCase()"></span>{{ entry.status }}</div>
+                <strong>{{ entry.count }}</strong>
+                <span class="status-meter"><span [style.width.%]="entry.percentage"></span></span>
+              </div>
+            }
+          </div>
+        </section>
+      </div>
       <h2 class="admin-subheading">Recent orders</h2>
       <table class="admin-table">
         <thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead>
@@ -126,6 +162,32 @@
         <div class="admin-stat"><span>Total revenue</span><strong>{{ formatPrice(totalRevenue()) }}</strong></div>
         <div class="admin-stat"><span>Total orders</span><strong>{{ orderHistoryService.allOrders().length }}</strong></div>
         <div class="admin-stat"><span>Average order value</span><strong>{{ formatPrice(averageOrderValue()) }}</strong></div>
+      </div>
+      <div class="admin-chart-grid reports-grid">
+        <section class="chart-card" aria-labelledby="stock-chart-title">
+          <div class="chart-heading"><div><span>Inventory</span><h2 id="stock-chart-title">Stock by category</h2></div></div>
+          <div class="horizontal-chart">
+            @for (entry of stockByCategory(); track entry.category) {
+              <div class="horizontal-row">
+                <div class="horizontal-meta"><span>{{ categoryLabel(entry.category) }}</span><strong>{{ entry.stock }} units</strong></div>
+                <span class="horizontal-track"><span [style.width.%]="entry.percentage"></span></span>
+                <small>{{ entry.productCount }} SKUs</small>
+              </div>
+            }
+          </div>
+        </section>
+        <section class="chart-card" aria-labelledby="top-products-chart-title">
+          <div class="chart-heading"><div><span>Sales mix</span><h2 id="top-products-chart-title">Top products</h2></div></div>
+          <div class="horizontal-chart">
+            @for (entry of topProductBars(); track entry.name) {
+              <div class="horizontal-row">
+                <div class="horizontal-meta"><span>{{ entry.name }}</span><strong>{{ entry.units }} sold</strong></div>
+                <span class="horizontal-track coral"><span [style.width.%]="entry.width"></span></span>
+              </div>
+            }
+            @empty { <p class="chart-empty">No sales data yet.</p> }
+          </div>
+        </section>
       </div>
       <h2 class="admin-subheading">Top-selling products</h2>
       <table class="admin-table">
