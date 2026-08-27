@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, computed, input, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, computed, effect, input, signal } from '@angular/core';
 
 @Component({
   selector: 'app-customer-counter',
@@ -19,7 +19,12 @@ export class CustomerCounterComponent implements AfterViewInit, OnDestroy {
   private animationFrame?: number;
   private hasStarted = false;
 
-  constructor(private readonly hostElement: ElementRef<HTMLElement>) {}
+  constructor(private readonly hostElement: ElementRef<HTMLElement>) {
+    effect(() => {
+      const total = this.totalCustomers();
+      if (this.hasStarted) this.displayedCustomers.set(total);
+    });
+  }
 
   ngAfterViewInit(): void {
     this.observer = new IntersectionObserver((entries) => {

@@ -1,6 +1,9 @@
-import { Component, inject, input, OnInit, output, signal } from '@angular/core';
+import { Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
 import { ProductService } from '../../core/services/product.service';
+import { PRODUCTS } from '../../data/product-data';
 import { CartItem, MakhanaCategory, Product } from '../../models/product';
+
+const defaultProductIds = new Set(PRODUCTS.map((product) => product.id));
 
 @Component({
   selector: 'app-product-catalog',
@@ -12,6 +15,7 @@ export class ProductCatalogComponent implements OnInit {
   private readonly productService = inject(ProductService);
   readonly cartItems = input<CartItem[]>([]);
   protected readonly products = this.productService.products;
+  protected readonly customProducts = computed(() => this.products().filter((product) => !defaultProductIds.has(product.id)));
   protected readonly selectedSize = signal<Record<MakhanaCategory, string>>({ normal: '250g', 'ready-to-eat': '250g', salty: '250g', tikha: '250g' });
   protected readonly addProduct = output<Product>();
   protected readonly changeQuantity = output<{ id: string; quantity: number }>();
@@ -30,12 +34,28 @@ export class ProductCatalogComponent implements OnInit {
     this.selectedSize.update((selected) => ({ ...selected, [category]: size }));
   }
 
+  protected scrollCarousel(track: HTMLElement, direction: -1 | 1): void {
+    track.scrollBy({ left: direction * Math.max(track.clientWidth * 0.85, 280), behavior: 'smooth' });
+  }
+
   protected formatPrice(price: number): string {
     return `₹${price.toLocaleString('en-IN')}`;
   }
 
   protected quantityFor(productId: string): number {
     return this.cartItems().find((item) => item.product.id === productId)?.quantity ?? 0;
+  }
+
+  protected stockFor(product: Product): number {
+    return product.stock ?? 0;
+  }
+
+  protected isOutOfStock(product: Product): boolean {
+    return this.stockFor(product) <= 0;
+  }
+
+  protected hasMaxQuantity(product: Product): boolean {
+    return this.quantityFor(product.id) >= this.stockFor(product);
   }
 
   protected categoryLabel(category: MakhanaCategory): string {

@@ -1,6 +1,9 @@
 {
+  "functions": {
+    "source": "functions"
+  },
   "hosting": {
-    "public": "dist",
+    "public": "dist/makhana-x/browser",
     "ignore": [
       "firebase.json",
       "**/.*",

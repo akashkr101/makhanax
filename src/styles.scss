@@ -6,3 +6,5 @@ html { scroll-behavior: smooth; }
 body { background: var(--paper); color: var(--ink); font-family: var(--body); margin: 0; overflow-x: hidden; }
 body::before { background-image: radial-gradient(rgba(27, 28, 23, .08) .6px, transparent .6px); background-size: 7px 7px; content: ''; inset: 0; opacity: .18; pointer-events: none; position: fixed; z-index: -1; }
 ::selection { background: var(--coral); color: var(--paper); }
+.stock-limit { color: var(--coral); font-size: 10px; font-weight: 800; letter-spacing: .08em; margin: 0 0 6px; text-transform: uppercase; }
+.quantity button:disabled { cursor: not-allowed; opacity: .4; }

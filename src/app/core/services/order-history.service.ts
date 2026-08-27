@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 export type OrderStatus = 'New' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Cancelled';
 
 export interface OrderLineItem {
+  productId?: string;
   name: string;
   size: string;
   quantity: number;
@@ -16,10 +17,14 @@ export interface OrderRecord {
   id: string;
   userId: string;
   customerName: string;
+  customerEmail: string;
   placedAt: string;
   total: number;
   paymentMethod: string;
   status: OrderStatus;
+  stockAdjusted?: boolean;
+  confirmationEmailSent?: boolean;
+  confirmationEmailSentAt?: string;
   items: OrderLineItem[];
 }
 
@@ -60,13 +65,29 @@ export class OrderHistoryService {
   }
 
   async updateStatus(orderId: string, status: OrderStatus): Promise<void> {
-    await updateDoc(doc(this.firestore, 'orders', orderId), { status });
-    this.allOrders.update((orders) => orders.map((order) => order.id === orderId ? { ...order, status } : order));
+    const changes: Partial<OrderRecord> = { status };
+    await updateDoc(doc(this.firestore, 'orders', orderId), changes);
+    this.allOrders.update((orders) => orders.map((order) => order.id === orderId ? { ...order, ...changes } : order));
   }
 
-  async record(userId: string, customerName: string, order: Omit<OrderRecord, 'id' | 'userId' | 'customerName' | 'placedAt' | 'status'>): Promise<void> {
+  async markStockAdjusted(orderId: string): Promise<void> {
+    const changes: Partial<OrderRecord> = { stockAdjusted: true };
+    await updateDoc(doc(this.firestore, 'orders', orderId), changes);
+    this.allOrders.update((orders) => orders.map((order) => order.id === orderId ? { ...order, ...changes } : order));
+  }
+
+  async markConfirmationEmailSent(orderId: string): Promise<void> {
+    const changes: Partial<OrderRecord> = {
+      confirmationEmailSent: true,
+      confirmationEmailSentAt: new Date().toISOString()
+    };
+    await updateDoc(doc(this.firestore, 'orders', orderId), changes);
+    this.allOrders.update((orders) => orders.map((order) => order.id === orderId ? { ...order, ...changes } : order));
+  }
+
+  async record(userId: string, customerName: string, customerEmail: string, order: Omit<OrderRecord, 'id' | 'userId' | 'customerName' | 'customerEmail' | 'placedAt' | 'status'>): Promise<void> {
     const placedAt = new Date().toISOString();
-    const payload = { ...order, userId, customerName, placedAt, status: 'New' as OrderStatus };
+    const payload = { ...order, userId, customerName, customerEmail, placedAt, status: 'New' as OrderStatus };
     const localOrder: OrderRecord = { ...payload, id: `order-${Date.now()}` };
     this.orders.update((orders) => [localOrder, ...orders].slice(0, 25));
     this.writeLocalOrders(userId, this.orders());
@@ -112,4 +133,5 @@ export class OrderHistoryService {
       console.error('Saving orders to local storage failed:', error);
     }
   }
+
 }

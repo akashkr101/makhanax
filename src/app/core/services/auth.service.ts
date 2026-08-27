@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { FirebaseApp, initializeApp } from 'firebase/app';
 import { Auth, ConfirmationResult, RecaptchaVerifier, createUserWithEmailAndPassword, getAuth, onAuthStateChanged, sendEmailVerification, signInWithEmailAndPassword, signInWithPhoneNumber, signOut, updateProfile } from 'firebase/auth';
-import { doc, getDoc, getFirestore, setDoc } from 'firebase/firestore';
+import { doc, getDoc, getFirestore, increment, setDoc } from 'firebase/firestore';
 import { environment } from '../../../environments/environment';
 
 export type AuthStep = 'phone' | 'verification' | 'email' | 'verified';
@@ -19,6 +19,7 @@ export class AuthService {
   readonly phoneNumber = signal('');
   readonly loginOpen = signal(false);
   readonly error = signal('');
+  readonly success = signal('');
   readonly loading = signal(false);
   readonly emailMode = signal<EmailAuthMode>('signIn');
   readonly isAuthenticated = signal(false);
@@ -33,6 +34,11 @@ export class AuthService {
   private confirmationResult?: ConfirmationResult;
   private recaptchaVerifier?: RecaptchaVerifier;
   private roleResolution: Promise<void> = Promise.resolve();
+  private authReadyResolved = false;
+  private authReadyResolve: () => void = () => undefined;
+  private readonly authReady = new Promise<void>((resolve) => {
+    this.authReadyResolve = resolve;
+  });
 
   constructor() {
     onAuthStateChanged(this.auth, (user) => {
@@ -53,10 +59,15 @@ export class AuthService {
         this.roleLoading.set(false);
         this.roleResolution = Promise.resolve();
       }
+      if (!this.authReadyResolved) {
+        this.authReadyResolved = true;
+        this.authReadyResolve();
+      }
     });
   }
 
   async waitForRole(): Promise<UserRole | null> {
+    await this.authReady;
     await this.roleResolution;
     return this.role();
   }
@@ -64,6 +75,7 @@ export class AuthService {
   private async syncCustomerDirectory(userId: string, displayName: string, email: string, phoneNumber: string): Promise<void> {
     try {
       const customerDoc = doc(this.firestore, 'customers', userId);
+      const statsDoc = doc(this.firestore, 'site-stats', 'community');
       const snapshot = await getDoc(customerDoc);
       const existingRole = snapshot.data()?.['role'] as UserRole | undefined;
       await setDoc(customerDoc, {
@@ -71,6 +83,16 @@ export class AuthService {
         role: existingRole ?? 'CUSTOMER',
         updatedAt: new Date().toISOString()
       }, { merge: true });
+      if (!snapshot.exists()) {
+        try {
+          await setDoc(statsDoc, {
+            customerCount: increment(1),
+            updatedAt: new Date().toISOString()
+          }, { merge: true });
+        } catch (statsError: unknown) {
+          console.error('Updating customer count failed:', statsError);
+        }
+      }
       this.role.set(existingRole ?? 'CUSTOMER');
     } catch (error: unknown) {
       console.error('Syncing customer directory failed:', error);
@@ -99,6 +121,7 @@ export class AuthService {
 
     this.loading.set(true);
     this.error.set('');
+    this.success.set('');
     try {
       this.phoneNumber.set(formattedPhoneNumber);
       this.recaptchaVerifier ??= new RecaptchaVerifier(this.auth, 'recaptcha-container', { size: 'invisible' });
@@ -122,6 +145,7 @@ export class AuthService {
     }
     this.loading.set(true);
     this.error.set('');
+    this.success.set('');
     try {
       await this.confirmationResult.confirm(code);
       this.step.set('verified');
@@ -137,12 +161,14 @@ export class AuthService {
 
   usePhoneLogin(): void {
     this.error.set('');
+    this.success.set('');
     this.step.set('phone');
     this.destroyRecaptcha();
   }
 
   useEmailLogin(mode: EmailAuthMode = 'signIn'): void {
     this.error.set('');
+    this.success.set('');
     this.emailMode.set(mode);
     this.step.set('email');
     this.destroyRecaptcha();
@@ -161,10 +187,16 @@ export class AuthService {
 
     this.loading.set(true);
     this.error.set('');
+    this.success.set('');
     try {
       if (this.emailMode() === 'register') {
         const credential = await createUserWithEmailAndPassword(this.auth, normalizedEmail, password);
         await sendEmailVerification(credential.user);
+        await signOut(this.auth);
+        this.emailMode.set('signIn');
+        this.step.set('email');
+        this.success.set('Account created successfully. Please sign in to continue.');
+        return false;
       } else {
         await signInWithEmailAndPassword(this.auth, normalizedEmail, password);
       }
@@ -218,6 +250,7 @@ export class AuthService {
   resetFlow(): void {
     this.step.set('phone');
     this.error.set('');
+    this.success.set('');
     this.confirmationResult = undefined;
     this.destroyRecaptcha();
   }

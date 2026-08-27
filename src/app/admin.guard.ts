@@ -5,7 +5,7 @@ import { AuthService } from './core/services/auth.service';
 export const adminGuard: CanActivateFn = async () => {
   const authService = inject(AuthService);
   const router = inject(Router);
-  if (authService.isAuthenticated() && await authService.waitForRole() === 'ADMIN') return true;
+  if (await authService.waitForRole() === 'ADMIN') return true;
   router.navigate(['']);
   return false;
 };

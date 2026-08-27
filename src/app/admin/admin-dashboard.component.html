@@ -61,6 +61,14 @@
         </section>
       </div>
       <h2 class="admin-subheading">Recent orders</h2>
+      <div class="order-filter-bar">
+        <label>Status<select [ngModel]="orderStatusFilter()" (ngModelChange)="orderStatusFilter.set($event)" name="overviewStatusFilter">@for (status of statusFilters; track status) { <option [value]="status">{{ status }}</option> }</select></label>
+        <label>From<input type="date" [ngModel]="orderFromDate()" (ngModelChange)="orderFromDate.set($event)" name="overviewFromDate"></label>
+        <label>To<input type="date" [ngModel]="orderToDate()" (ngModelChange)="orderToDate.set($event)" name="overviewToDate"></label>
+        <label class="order-search">Search<input type="search" [ngModel]="orderSearch()" (ngModelChange)="orderSearch.set($event)" name="overviewOrderSearch" placeholder="Name, email, order, item"></label>
+        <button type="button" class="admin-button secondary" (click)="resetOrderFilters()">Reset</button>
+        <button type="button" class="admin-button" (click)="downloadOrdersReport()">Download Excel</button>
+      </div>
       <table class="admin-table">
         <thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead>
         <tbody>
@@ -116,24 +124,27 @@
 
     @if (section() === 'orders') {
       <h1>Orders</h1>
+      @if (orderActionError()) { <p class="admin-error">{{ orderActionError() }}</p> }
+      @if (orderActionNotice()) { <p class="admin-success">{{ orderActionNotice() }}</p> }
       <table class="admin-table">
-        <thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Placed</th><th>Status</th></tr></thead>
+        <thead><tr><th>Order</th><th>Customer name</th><th>Email</th><th>Items</th><th>Total</th><th>Placed</th><th>Status</th></tr></thead>
         <tbody>
           @for (order of orderHistoryService.allOrders(); track order.id) {
             <tr>
               <td>#{{ order.id.slice(-4) }}</td>
-              <td>{{ order.customerName }}</td>
+              <td>{{ customerNameForOrder(order) }}</td>
+              <td class="admin-email-cell">{{ customerEmailForOrder(order) }}</td>
               <td>{{ order.items.length }}</td>
               <td>{{ formatPrice(order.total) }}</td>
               <td>{{ formatDate(order.placedAt) }}</td>
               <td>
-                <select [value]="order.status" (change)="changeOrderStatus(order.id, $any($event.target).value)">
+                <select [value]="order.status" [disabled]="updatingOrderId() === order.id" (change)="changeOrderStatus(order.id, $any($event.target).value)">
                   @for (status of statuses; track status) { <option [value]="status">{{ status }}</option> }
                 </select>
               </td>
             </tr>
           }
-          @empty { <tr><td colspan="6">No orders yet.</td></tr> }
+          @empty { <tr><td colspan="7">No orders yet.</td></tr> }
         </tbody>
       </table>
     }
@@ -158,9 +169,17 @@
 
     @if (section() === 'reports') {
       <h1>Reports</h1>
+      <div class="order-filter-bar report-filter-bar">
+        <label>Status<select [ngModel]="orderStatusFilter()" (ngModelChange)="orderStatusFilter.set($event)" name="reportStatusFilter">@for (status of statusFilters; track status) { <option [value]="status">{{ status }}</option> }</select></label>
+        <label>From<input type="date" [ngModel]="orderFromDate()" (ngModelChange)="orderFromDate.set($event)" name="reportFromDate"></label>
+        <label>To<input type="date" [ngModel]="orderToDate()" (ngModelChange)="orderToDate.set($event)" name="reportToDate"></label>
+        <label class="order-search">Search<input type="search" [ngModel]="orderSearch()" (ngModelChange)="orderSearch.set($event)" name="reportOrderSearch" placeholder="Name, email, order, item"></label>
+        <button type="button" class="admin-button secondary" (click)="resetOrderFilters()">Reset</button>
+        <button type="button" class="admin-button" (click)="downloadOrdersReport()">Download Excel</button>
+      </div>
       <div class="admin-stats">
         <div class="admin-stat"><span>Total revenue</span><strong>{{ formatPrice(totalRevenue()) }}</strong></div>
-        <div class="admin-stat"><span>Total orders</span><strong>{{ orderHistoryService.allOrders().length }}</strong></div>
+        <div class="admin-stat"><span>Total orders</span><strong>{{ filteredOrders().length }}</strong></div>
         <div class="admin-stat"><span>Average order value</span><strong>{{ formatPrice(averageOrderValue()) }}</strong></div>
       </div>
       <div class="admin-chart-grid reports-grid">

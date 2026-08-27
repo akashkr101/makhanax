@@ -22,6 +22,8 @@
           @if (addressSaveStatus()) { <p class="address-save-status" role="status">{{ addressSaveStatus() }}</p> }
           <label for="checkout-name">Full name</label>
           <input id="checkout-name" name="name" autocomplete="name" [(ngModel)]="fullName" required>
+          <label for="checkout-email">Email for order confirmation</label>
+          <input id="checkout-email" name="email" type="email" autocomplete="email" [(ngModel)]="emailAddress" required>
           <label for="checkout-phone">Mobile number</label>
           <input id="checkout-phone" name="phone" type="tel" autocomplete="tel" [(ngModel)]="phoneNumber" required>
           <label for="checkout-address">Delivery address</label>

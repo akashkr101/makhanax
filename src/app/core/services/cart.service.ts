@@ -18,13 +18,16 @@ export class CartService {
   });
   readonly total = computed(() => this.subtotal() - this.discount() + this.tax());
 
-  add(product: Product): void {
+  add(product: Product): boolean {
+    if ((product.stock ?? 0) <= 0) return false;
     this.state.update((items) => {
       const existing = items.find((item) => item.product.id === product.id);
+      if (existing && existing.quantity >= (product.stock ?? 0)) return items;
       return existing
         ? items.map((item) => item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item)
         : [...items, { product, quantity: 1 }];
     });
+    return true;
   }
 
   setQuantity(id: string, quantity: number): void {
@@ -32,7 +35,11 @@ export class CartService {
       this.remove(id);
       return;
     }
-    this.state.update((items) => items.map((item) => item.product.id === id ? { ...item, quantity } : item));
+    this.state.update((items) => items.map((item) => {
+      if (item.product.id !== id) return item;
+      const stock = item.product.stock ?? 0;
+      return { ...item, quantity: Math.min(quantity, stock) };
+    }).filter((item) => item.quantity > 0));
   }
 
   remove(id: string): void {

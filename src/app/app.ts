@@ -1,4 +1,4 @@
-import { Component, computed, HostListener, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, HostListener, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CartDrawerComponent } from './components/cart-drawer/cart-drawer.component';
 import { CheckoutComponent } from './components/checkout/checkout.component';
@@ -6,6 +6,7 @@ import { CustomerCounterComponent } from './components/customer-counter/customer
 import { ProductCatalogComponent } from './components/product-catalog/product-catalog.component';
 import { AuthService, EmailAuthMode } from './core/services/auth.service';
 import { CartService } from './core/services/cart.service';
+import { CustomerDirectoryService } from './core/services/customer-directory.service';
 import { OrderHistoryService } from './core/services/order-history.service';
 import { Product } from './models/product';
 
@@ -15,9 +16,10 @@ import { Product } from './models/product';
   templateUrl: './app.html',
   styleUrls: ['./app.scss', './app-overrides.scss'],
 })
-export class App {
+export class App implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly cartService = inject(CartService);
+  private readonly customerDirectoryService = inject(CustomerDirectoryService);
   private readonly orderHistoryService = inject(OrderHistoryService);
   private readonly router = inject(Router);
   protected readonly role = this.authService.role;
@@ -35,6 +37,7 @@ export class App {
   protected readonly otpSent = computed(() => this.authService.step() === 'verification');
   protected readonly emailAuthOpen = computed(() => this.authService.step() === 'email');
   protected readonly authError = this.authService.error;
+  protected readonly authSuccess = this.authService.success;
   protected readonly authLoading = this.authService.loading;
   protected readonly emailAuthMode = this.authService.emailMode;
   protected readonly isAuthenticated = this.authService.isAuthenticated;
@@ -52,8 +55,13 @@ export class App {
   protected readonly orderConfirmation = signal(false);
   protected readonly cartItems = this.cartService.items;
   protected readonly cartItemCount = this.cartService.itemCount;
+  protected readonly totalCustomers = this.customerDirectoryService.totalCustomers;
   protected readonly headerHidden = signal(false);
   private lastScrollPosition = 0;
+
+  ngOnInit(): void {
+    this.customerDirectoryService.watchTotalCustomers();
+  }
 
   @HostListener('window:scroll')
   protected onWindowScroll(): void {

@@ -3,8 +3,9 @@ import { UpperCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
-import { CustomerDirectoryService } from '../core/services/customer-directory.service';
-import { OrderHistoryService, OrderStatus } from '../core/services/order-history.service';
+import { CustomerDirectoryService, CustomerRecord } from '../core/services/customer-directory.service';
+import { OrderEmailService } from '../core/services/order-email.service';
+import { OrderHistoryService, OrderRecord, OrderStatus } from '../core/services/order-history.service';
 import { ProductService } from '../core/services/product.service';
 import { MakhanaCategory, Product } from '../models/product';
 
@@ -14,6 +15,10 @@ type RevenuePoint = { label: string; value: number; formattedValue: string; x: n
 type StatusSummary = { status: OrderStatus; count: number; percentage: number };
 type CategoryStockSummary = { category: MakhanaCategory; stock: number; productCount: number; percentage: number };
 type TopProductSummary = { name: string; units: number; width: number };
+type OrderStatusFilter = OrderStatus | 'All';
+
+const adminSections: AdminSection[] = ['overview', 'products', 'orders', 'customers', 'reports'];
+const adminSectionStorageKey = 'makhanax-admin-section';
 
 const emptyProductForm = (): Omit<Product, 'id'> => ({
   name: '', category: 'normal', size: '250g', price: 0, image: '', tone: 'cream', description: '', stock: 0
@@ -30,18 +35,27 @@ export class AdminDashboardComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   protected readonly productService = inject(ProductService);
+  private readonly orderEmailService = inject(OrderEmailService);
   protected readonly orderHistoryService = inject(OrderHistoryService);
   protected readonly customerDirectoryService = inject(CustomerDirectoryService);
 
   protected readonly section = signal<AdminSection>('overview');
   protected readonly customerName = this.authService.customerProfile;
   protected readonly statuses: OrderStatus[] = ['New', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
+  protected readonly statusFilters: OrderStatusFilter[] = ['All', ...this.statuses];
   protected readonly categories: MakhanaCategory[] = ['normal', 'ready-to-eat', 'salty', 'tikha'];
+  protected readonly orderStatusFilter = signal<OrderStatusFilter>('All');
+  protected readonly orderSearch = signal('');
+  protected readonly orderFromDate = signal('');
+  protected readonly orderToDate = signal('');
 
   protected readonly editingProductId = signal<string | null>(null);
   protected productForm: Omit<Product, 'id'> = emptyProductForm();
   protected readonly savingProduct = signal(false);
   protected readonly productFormError = signal('');
+  protected readonly orderActionError = signal('');
+  protected readonly orderActionNotice = signal('');
+  protected readonly updatingOrderId = signal<string | null>(null);
 
   protected readonly todaysRevenue = computed(() => {
     const today = new Date().toDateString();
@@ -59,17 +73,18 @@ export class AdminDashboardComponent implements OnInit {
   protected readonly lowStockCount = computed(() =>
     this.productService.products().filter((product) => (product.stock ?? 0) <= 5).length
   );
-  protected readonly recentOrders = computed(() => this.orderHistoryService.allOrders().slice(0, 8));
+  protected readonly filteredOrders = computed(() => this.orderHistoryService.allOrders().filter((order) => this.matchesOrderFilters(order)));
+  protected readonly recentOrders = computed(() => this.filteredOrders().slice(0, 8));
   protected readonly totalRevenue = computed(() =>
-    this.orderHistoryService.allOrders().reduce((sum, order) => sum + order.total, 0)
+    this.filteredOrders().reduce((sum, order) => sum + order.total, 0)
   );
   protected readonly averageOrderValue = computed(() => {
-    const orders = this.orderHistoryService.allOrders();
+    const orders = this.filteredOrders();
     return orders.length === 0 ? 0 : this.totalRevenue() / orders.length;
   });
   protected readonly topProducts = computed(() => {
     const unitsByName = new Map<string, number>();
-    for (const order of this.orderHistoryService.allOrders()) {
+    for (const order of this.filteredOrders()) {
       for (const item of order.items) {
         unitsByName.set(item.name, (unitsByName.get(item.name) ?? 0) + item.quantity);
       }
@@ -83,7 +98,7 @@ export class AdminDashboardComponent implements OnInit {
       return date;
     });
     const revenueByDay = new Map(days.map((date) => [date.toDateString(), 0]));
-    for (const order of this.orderHistoryService.allOrders()) {
+    for (const order of this.filteredOrders()) {
       const key = new Date(order.placedAt).toDateString();
       if (revenueByDay.has(key)) revenueByDay.set(key, (revenueByDay.get(key) ?? 0) + order.total);
     }
@@ -119,7 +134,7 @@ export class AdminDashboardComponent implements OnInit {
     return { points, linePoints, areaPoints, bottom };
   });
   protected readonly orderStatusChart = computed<StatusSummary[]>(() => {
-    const orders = this.orderHistoryService.allOrders();
+    const orders = this.filteredOrders();
     const totalOrders = Math.max(orders.length, 1);
     return this.statuses.map((status) => {
       const count = orders.filter((order) => order.status === status).length;
@@ -146,6 +161,7 @@ export class AdminDashboardComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.restoreSection();
     void this.productService.load();
     void this.orderHistoryService.loadAll();
     void this.customerDirectoryService.loadAll();
@@ -153,6 +169,20 @@ export class AdminDashboardComponent implements OnInit {
 
   protected selectSection(section: AdminSection): void {
     this.section.set(section);
+    try {
+      localStorage.setItem(adminSectionStorageKey, section);
+    } catch (error: unknown) {
+      console.error('Saving admin section failed:', error);
+    }
+  }
+
+  private restoreSection(): void {
+    try {
+      const savedSection = localStorage.getItem(adminSectionStorageKey);
+      if (adminSections.includes(savedSection as AdminSection)) this.section.set(savedSection as AdminSection);
+    } catch (error: unknown) {
+      console.error('Restoring admin section failed:', error);
+    }
   }
 
   protected backToStore(): void {
@@ -176,8 +206,126 @@ export class AdminDashboardComponent implements OnInit {
     return { normal: 'Classic', 'ready-to-eat': 'Ready to eat', salty: 'Salty', tikha: 'Tikha' }[category];
   }
 
+  protected resetOrderFilters(): void {
+    this.orderStatusFilter.set('All');
+    this.orderSearch.set('');
+    this.orderFromDate.set('');
+    this.orderToDate.set('');
+  }
+
+  protected downloadOrdersReport(): void {
+    const headers = ['Order ID', 'Customer name', 'Email', 'Items', 'Total', 'Payment method', 'Placed', 'Status'];
+    const rows = this.filteredOrders().map((order) => [
+      order.id,
+      this.customerNameForOrder(order),
+      this.customerEmailForOrder(order),
+      order.items.map((item) => `${item.quantity} x ${item.name} (${item.size})`).join('; '),
+      order.total,
+      order.paymentMethod.toUpperCase(),
+      this.formatDate(order.placedAt),
+      order.status
+    ]);
+    const csv = [headers, ...rows].map((row) => row.map((value) => this.csvCell(value)).join(',')).join('\n');
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `makhanax-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
+  protected customerNameForOrder(order: OrderRecord): string {
+    return this.customerForOrder(order)?.displayName || order.customerName || 'Customer';
+  }
+
+  protected customerEmailForOrder(order: OrderRecord): string {
+    return order.customerEmail || this.customerForOrder(order)?.email || '—';
+  }
+
   protected async changeOrderStatus(orderId: string, status: string): Promise<void> {
-    await this.orderHistoryService.updateStatus(orderId, status as OrderStatus);
+    this.orderActionError.set('');
+    this.orderActionNotice.set('');
+    const order = this.orderHistoryService.allOrders().find((candidate) => candidate.id === orderId);
+    if (!order) {
+      this.orderActionError.set('Could not find this order. Refresh and try again.');
+      return;
+    }
+    this.updatingOrderId.set(orderId);
+    try {
+      const nextStatus = status as OrderStatus;
+      await this.orderHistoryService.updateStatus(orderId, nextStatus);
+      await this.orderHistoryService.loadAll();
+      const savedOrder = this.orderHistoryService.allOrders().find((candidate) => candidate.id === orderId);
+      if (savedOrder?.status !== nextStatus) {
+        throw new Error(`Firestore still has this order as ${savedOrder?.status ?? 'unknown'}. Check Firestore rules for admin order updates.`);
+      }
+      let stockAdjusted = order.stockAdjusted;
+      if (nextStatus === 'Confirmed' && !order.stockAdjusted) {
+        try {
+          await this.productService.confirmOrderStock(order.items);
+          stockAdjusted = true;
+          await this.orderHistoryService.markStockAdjusted(orderId);
+        } catch (stockError: unknown) {
+          this.orderActionError.set(`Order confirmed, but stock could not be updated. ${this.formatError(stockError)}`);
+          console.error('Updating confirmed order stock failed:', stockError);
+        }
+      }
+      if (nextStatus === 'Confirmed' && !order.confirmationEmailSent) {
+        try {
+          await this.orderEmailService.sendOrderConfirmation({ ...order, status: nextStatus, stockAdjusted });
+          await this.orderHistoryService.markConfirmationEmailSent(orderId);
+          this.orderActionNotice.set(`Order confirmed and email has been sent to ${order.customerName || 'the customer'}.`);
+        } catch (emailError: unknown) {
+          this.orderActionError.set(`Order confirmed, but email could not be sent. ${this.formatError(emailError)}`);
+          console.error('Sending order confirmation email failed:', emailError);
+        }
+      } else if (nextStatus === 'Confirmed') {
+        this.orderActionNotice.set(`Order confirmed. Confirmation email was already sent to ${order.customerName || 'the customer'}.`);
+      } else {
+        this.orderActionNotice.set(`Order status updated to ${nextStatus}.`);
+      }
+    } catch (error: unknown) {
+      this.orderActionError.set(`Could not update this order. ${this.formatError(error)}`);
+      console.error('Updating order status failed:', error);
+      await this.orderHistoryService.loadAll();
+    } finally {
+      this.updatingOrderId.set(null);
+      if (this.orderActionNotice()) window.setTimeout(() => this.orderActionNotice.set(''), 5000);
+    }
+  }
+
+  private formatError(error: unknown): string {
+    if (error instanceof Error) return error.message;
+    if (typeof error === 'object' && error !== null && 'text' in error && typeof error.text === 'string') return error.text;
+    return 'Check EmailJS service, template, and public key settings.';
+  }
+
+  private matchesOrderFilters(order: OrderRecord): boolean {
+    const statusFilter = this.orderStatusFilter();
+    if (statusFilter !== 'All' && order.status !== statusFilter) return false;
+    const placedAt = new Date(order.placedAt);
+    const fromDate = this.orderFromDate();
+    const toDate = this.orderToDate();
+    if (fromDate && placedAt < new Date(`${fromDate}T00:00:00`)) return false;
+    if (toDate && placedAt > new Date(`${toDate}T23:59:59`)) return false;
+    const search = this.orderSearch().trim().toLowerCase();
+    if (!search) return true;
+    return [
+      order.id,
+      this.customerNameForOrder(order),
+      this.customerEmailForOrder(order),
+      order.paymentMethod,
+      order.status,
+      ...order.items.map((item) => `${item.name} ${item.size}`)
+    ].some((value) => value.toLowerCase().includes(search));
+  }
+
+  private csvCell(value: string | number): string {
+    return `"${String(value).replace(/"/g, '""')}"`;
+  }
+
+  private customerForOrder(order: OrderRecord): CustomerRecord | undefined {
+    return this.customerDirectoryService.customers().find((customer) => customer.id === order.userId);
   }
 
   protected editProduct(product: Product): void {

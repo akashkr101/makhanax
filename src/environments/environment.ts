@@ -5,6 +5,11 @@ export const environment: AppConfig = {
   paymentProvider: 'mock',
   otpProvider: 'firebase',
   enableCashOnDelivery: true,
+  emailjs: {
+    serviceId: 'service_eem8q09',
+    templateId: 'template_pfd7b68',
+    publicKey: 'qMTc464mSllCY1IHS'
+  },
   firebase: {
     apiKey: 'AIzaSyBAhvhO4V2D5ej5YuF2SFLSgYHSUD-3240',
     authDomain: 'makhanax-01.firebaseapp.com',

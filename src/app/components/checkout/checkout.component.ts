@@ -22,6 +22,7 @@ export class CheckoutComponent {
   protected paymentMethod = 'upi';
   protected addressCategory: AddressCategory = 'home';
   protected fullName = '';
+  protected emailAddress = '';
   protected phoneNumber = '';
   protected deliveryAddress = '';
   protected readonly savingAddress = signal(false);
@@ -33,6 +34,8 @@ export class CheckoutComponent {
   constructor() {
     effect(() => {
       const userId = this.authService.userId();
+      const profile = this.authService.customerProfile();
+      if (profile?.email && !this.emailAddress) this.emailAddress = profile.email;
       if (userId) {
         void this.addressBookService.load(userId);
       } else {
@@ -110,10 +113,11 @@ export class CheckoutComponent {
       } catch (error: unknown) {
         console.error('Saving delivery address failed:', error);
       }
-      await this.orderHistoryService.record(userId, this.fullName || 'Customer', {
+      await this.orderHistoryService.record(userId, this.fullName || 'Customer', this.emailAddress.trim().toLowerCase(), {
         total: this.total(),
         paymentMethod: this.paymentMethod,
         items: this.items().map((item) => ({
+          productId: item.product.id,
           name: item.product.name,
           size: item.product.size,
           quantity: item.quantity,
