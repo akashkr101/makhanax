@@ -70,12 +70,12 @@
         <button type="button" class="admin-button" (click)="downloadOrdersReport()">Download Excel</button>
       </div>
       <table class="admin-table">
-        <thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead>
+        <thead><tr><th>Order</th><th>Customer name</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead>
         <tbody>
           @for (order of recentOrders(); track order.id) {
             <tr>
               <td>#{{ order.id.slice(-4) }}</td>
-              <td>{{ order.customerName }}</td>
+              <td>{{ customerNameForOrder(order) }}</td>
               <td>{{ formatPrice(order.total) }}</td>
               <td>{{ order.paymentMethod | uppercase }}</td>
               <td><span class="status-badge" [class]="order.status.toLowerCase()">{{ order.status }}</span></td>
@@ -127,7 +127,7 @@
       @if (orderActionError()) { <p class="admin-error">{{ orderActionError() }}</p> }
       @if (orderActionNotice()) { <p class="admin-success">{{ orderActionNotice() }}</p> }
       <table class="admin-table">
-        <thead><tr><th>Order</th><th>Customer name</th><th>Email</th><th>Items</th><th>Total</th><th>Placed</th><th>Status</th></tr></thead>
+        <thead><tr><th>Order</th><th>Customer name</th><th>Email</th><th>Items</th><th>Total</th><th>Placed</th><th>Current status</th><th>Update status</th></tr></thead>
         <tbody>
           @for (order of orderHistoryService.allOrders(); track order.id) {
             <tr>
@@ -137,14 +137,16 @@
               <td>{{ order.items.length }}</td>
               <td>{{ formatPrice(order.total) }}</td>
               <td>{{ formatDate(order.placedAt) }}</td>
+              <td><span class="status-badge" [class]="order.status.toLowerCase()">{{ order.status }}</span></td>
               <td>
-                <select [value]="order.status" [disabled]="updatingOrderId() === order.id" (change)="changeOrderStatus(order.id, $any($event.target).value)">
-                  @for (status of statuses; track status) { <option [value]="status">{{ status }}</option> }
+                <select value="" [disabled]="updatingOrderId() === order.id || order.status === 'Delivered' || order.status === 'Cancelled'" (change)="changeOrderStatus(order.id, $any($event.target).value)">
+                  <option value="" disabled>Move to...</option>
+                  @for (status of statuses; track status) { <option [value]="status" [disabled]="!canMoveOrderTo(order.status, status)">{{ status }}</option> }
                 </select>
               </td>
             </tr>
           }
-          @empty { <tr><td colspan="7">No orders yet.</td></tr> }
+          @empty { <tr><td colspan="8">No orders yet.</td></tr> }
         </tbody>
       </table>
     }
@@ -152,7 +154,7 @@
     @if (section() === 'customers') {
       <h1>Customers</h1>
       <table class="admin-table">
-        <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+        <thead><tr><th>ID</th><th>Customer name</th><th>Email</th><th>Role</th></tr></thead>
         <tbody>
           @for (customer of customerDirectoryService.customers(); track customer.id) {
             <tr>

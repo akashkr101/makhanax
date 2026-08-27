@@ -16,6 +16,7 @@ type StatusSummary = { status: OrderStatus; count: number; percentage: number };
 type CategoryStockSummary = { category: MakhanaCategory; stock: number; productCount: number; percentage: number };
 type TopProductSummary = { name: string; units: number; width: number };
 type OrderStatusFilter = OrderStatus | 'All';
+const orderStatusRank: Record<OrderStatus, number> = { New: 0, Confirmed: 1, Shipped: 2, Delivered: 3, Cancelled: 4 };
 
 const adminSections: AdminSection[] = ['overview', 'products', 'orders', 'customers', 'reports'];
 const adminSectionStorageKey = 'makhanax-admin-section';
@@ -242,6 +243,13 @@ export class AdminDashboardComponent implements OnInit {
     return order.customerEmail || this.customerForOrder(order)?.email || '—';
   }
 
+  protected canMoveOrderTo(currentStatus: OrderStatus, nextStatus: OrderStatus): boolean {
+    if (currentStatus === nextStatus) return true;
+    if (currentStatus === 'Delivered' || currentStatus === 'Cancelled') return false;
+    if (nextStatus === 'Cancelled') return true;
+    return orderStatusRank[nextStatus] > orderStatusRank[currentStatus] && nextStatus !== 'New';
+  }
+
   protected async changeOrderStatus(orderId: string, status: string): Promise<void> {
     this.orderActionError.set('');
     this.orderActionNotice.set('');
@@ -253,6 +261,10 @@ export class AdminDashboardComponent implements OnInit {
     this.updatingOrderId.set(orderId);
     try {
       const nextStatus = status as OrderStatus;
+      if (!this.canMoveOrderTo(order.status, nextStatus)) {
+        this.orderActionError.set(`Cannot move an order from ${order.status} back to ${nextStatus}.`);
+        return;
+      }
       await this.orderHistoryService.updateStatus(orderId, nextStatus);
       await this.orderHistoryService.loadAll();
       const savedOrder = this.orderHistoryService.allOrders().find((candidate) => candidate.id === orderId);

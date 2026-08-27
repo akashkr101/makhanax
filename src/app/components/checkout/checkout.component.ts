@@ -16,6 +16,8 @@ export class CheckoutComponent {
   private readonly authService = inject(AuthService);
   private readonly addressBookService = inject(AddressBookService);
   private readonly orderHistoryService = inject(OrderHistoryService);
+  private loadedAddressUserId = '';
+  private hasAppliedSavedAddress = false;
   readonly items = input<CartItem[]>([]);
   readonly back = output<void>();
   readonly orderPlaced = output<void>();
@@ -36,11 +38,26 @@ export class CheckoutComponent {
       const userId = this.authService.userId();
       const profile = this.authService.customerProfile();
       if (profile?.email && !this.emailAddress) this.emailAddress = profile.email;
-      if (userId) {
-        void this.addressBookService.load(userId);
-      } else {
+      if (userId && userId !== this.loadedAddressUserId) {
+        this.loadedAddressUserId = userId;
+        this.hasAppliedSavedAddress = false;
+        void this.loadSavedAddresses(userId);
+      } else if (!userId) {
+        this.loadedAddressUserId = '';
+        this.hasAppliedSavedAddress = false;
         this.addressBookService.clear();
       }
+    });
+
+    effect(() => {
+      const addresses = this.savedAddresses();
+      if (this.hasAppliedSavedAddress || this.fullName || this.phoneNumber || this.deliveryAddress) return;
+      const category = this.addressCategoryWithSavedAddress(addresses);
+      if (!category) return;
+      this.addressCategory = category;
+      this.applySavedAddress(category);
+      this.addressSaveStatus.set(`${this.categoryLabel(category)} address loaded.`);
+      this.hasAppliedSavedAddress = true;
     });
   }
 
@@ -56,16 +73,7 @@ export class CheckoutComponent {
     this.addressCategory = category;
     this.addressSaveStatus.set('');
     this.addressSaved.set(false);
-    const savedAddress = this.savedAddresses()[category];
-    if (!savedAddress) {
-      this.fullName = '';
-      this.phoneNumber = '';
-      this.deliveryAddress = '';
-      return;
-    }
-    this.fullName = savedAddress.name;
-    this.phoneNumber = savedAddress.phone;
-    this.deliveryAddress = savedAddress.address;
+    this.applySavedAddress(category);
   }
 
   protected async saveAddress(): Promise<void> {
@@ -88,7 +96,7 @@ export class CheckoutComponent {
         phone: this.phoneNumber,
         address: this.deliveryAddress
       });
-      const label = `${this.addressCategory[0].toUpperCase()}${this.addressCategory.slice(1)} address saved`;
+      const label = `${this.categoryLabel(this.addressCategory)} address saved`;
       this.addressSaveStatus.set(saveMode === 'cloud' ? `${label}.` : `${label} on this device.`);
       this.addressSaved.set(true);
       window.setTimeout(() => this.addressSaved.set(false), 2200);
@@ -126,5 +134,25 @@ export class CheckoutComponent {
       });
     }
     this.orderPlaced.emit();
+  }
+
+  private async loadSavedAddresses(userId: string): Promise<void> {
+    await this.addressBookService.load(userId);
+  }
+
+  private applySavedAddress(category: AddressCategory): void {
+    const savedAddress = this.savedAddresses()[category];
+    if (!savedAddress) return;
+    this.fullName = savedAddress.name;
+    this.phoneNumber = savedAddress.phone;
+    this.deliveryAddress = savedAddress.address;
+  }
+
+  private addressCategoryWithSavedAddress(addresses: Partial<Record<AddressCategory, unknown>>): AddressCategory | null {
+    return (['home', 'office', 'flat', 'other'] as AddressCategory[]).find((category) => addresses[category]) ?? null;
+  }
+
+  private categoryLabel(category: AddressCategory): string {
+    return `${category[0].toUpperCase()}${category.slice(1)}`;
   }
 }
