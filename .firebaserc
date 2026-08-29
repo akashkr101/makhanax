@@ -2,7 +2,7 @@
   "projects": {
     "default": "makhanax-dev-2026",
     "development": "makhanax-dev-2026",
-    "test": "makhanax-01",
+    "test": "makhanax-test",
     "production": "makhanax-prod-2026"
   },
   "targets": {},
