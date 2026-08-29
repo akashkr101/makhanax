@@ -83,9 +83,11 @@ export class AuthService {
       const statsDoc = doc(this.firestore, 'site-stats', 'community');
       const snapshot = await getDoc(customerDoc);
       const existingRole = snapshot.data()?.['role'] as UserRole | undefined;
+      const normalizedEmail = email.trim().toLowerCase();
+      const configuredRole: UserRole = environment.adminEmails?.includes(normalizedEmail) ? 'ADMIN' : 'CUSTOMER';
       await setDoc(customerDoc, {
         displayName, email, phoneNumber,
-        role: existingRole ?? 'CUSTOMER',
+        role: existingRole ?? configuredRole,
         updatedAt: new Date().toISOString()
       }, { merge: true });
       if (!snapshot.exists()) {
@@ -98,7 +100,7 @@ export class AuthService {
           console.error('Updating customer count failed:', statsError);
         }
       }
-      this.role.set(existingRole ?? 'CUSTOMER');
+      this.role.set(existingRole ?? configuredRole);
     } catch (error: unknown) {
       console.error('Syncing customer directory failed:', error);
       this.role.set('CUSTOMER');

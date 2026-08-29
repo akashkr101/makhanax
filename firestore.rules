@@ -1,0 +1,131 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Assumed data model:
+    // products contain public catalog and stock data; customers contain private
+    // profile/address data; orders and notifications belong to one customer.
+    // Reviews contain only public display names and review content.
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.email == 'akrocks63@gmail.com';
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function validProduct() {
+      return request.resource.data.keys().hasAll(['name', 'category', 'size', 'price', 'image', 'tone', 'description']) &&
+        request.resource.data.keys().hasOnly(['name', 'category', 'size', 'price', 'image', 'tone', 'description', 'stock', 'averageRating', 'totalReviews', 'reservations', 'updatedAt']) &&
+        request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 120 &&
+        request.resource.data.category in ['normal', 'ready-to-eat', 'salty', 'tikha'] &&
+        request.resource.data.size is string && request.resource.data.size.size() > 0 && request.resource.data.size.size() <= 20 &&
+        request.resource.data.price is number && request.resource.data.price >= 0 &&
+        request.resource.data.image is string && request.resource.data.image.size() <= 2048 &&
+        request.resource.data.tone is string && request.resource.data.tone.size() <= 30 &&
+        request.resource.data.description is string && request.resource.data.description.size() <= 1000 &&
+        (!('stock' in request.resource.data) || (request.resource.data.stock is number && request.resource.data.stock >= 0));
+    }
+
+    function validCustomer() {
+      return request.resource.data.keys().hasAll(['displayName', 'email', 'phoneNumber', 'role', 'updatedAt']) &&
+        request.resource.data.keys().hasOnly(['displayName', 'email', 'phoneNumber', 'role', 'updatedAt', 'addresses']) &&
+        request.resource.data.displayName is string && request.resource.data.displayName.size() <= 120 &&
+        request.resource.data.email is string && request.resource.data.email.size() <= 320 &&
+        request.resource.data.phoneNumber is string && request.resource.data.phoneNumber.size() <= 30 &&
+        request.resource.data.updatedAt is string && request.resource.data.updatedAt.size() <= 40 &&
+        request.resource.data.role in ['ADMIN', 'CUSTOMER'];
+    }
+
+    function validOrder() {
+      return request.resource.data.keys().hasAll(['userId', 'customerName', 'customerEmail', 'placedAt', 'total', 'paymentMethod', 'status', 'items']) &&
+        request.resource.data.keys().hasOnly(['userId', 'customerName', 'customerEmail', 'placedAt', 'total', 'paymentMethod', 'status', 'items', 'stockAdjusted', 'confirmationEmailSent', 'confirmationEmailSentAt']) &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.customerName is string && request.resource.data.customerName.size() <= 120 &&
+        request.resource.data.customerEmail is string && request.resource.data.customerEmail.size() <= 320 &&
+        request.resource.data.placedAt is string && request.resource.data.placedAt.size() <= 40 &&
+        request.resource.data.total is number && request.resource.data.total >= 0 &&
+        request.resource.data.paymentMethod is string && request.resource.data.paymentMethod.size() <= 30 &&
+        request.resource.data.status == 'New' &&
+        request.resource.data.items is list && request.resource.data.items.size() > 0 && request.resource.data.items.size() <= 50;
+    }
+
+    function validReview() {
+      return request.resource.data.keys().hasAll(['productId', 'userId', 'userName', 'rating', 'comment', 'createdAt', 'updatedAt', 'helpful']) &&
+        request.resource.data.keys().hasOnly(['productId', 'userId', 'userName', 'rating', 'comment', 'createdAt', 'updatedAt', 'helpful']) &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.productId is string && request.resource.data.productId.size() > 0 && request.resource.data.productId.size() <= 200 &&
+        request.resource.data.userName is string && request.resource.data.userName.size() <= 120 &&
+        request.resource.data.rating is int && request.resource.data.rating >= 1 && request.resource.data.rating <= 5 &&
+        request.resource.data.comment is string && request.resource.data.comment.size() <= 2000 &&
+        request.resource.data.createdAt is number && request.resource.data.updatedAt is number &&
+        request.resource.data.helpful is int && request.resource.data.helpful >= 0;
+    }
+
+    function validNotification() {
+      return request.resource.data.keys().hasAll(['userId', 'type', 'title', 'message', 'read', 'createdAt', 'sentVia']) &&
+        request.resource.data.keys().hasOnly(['userId', 'type', 'title', 'message', 'orderId', 'read', 'createdAt', 'sentVia']) &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.type in ['order_placed', 'order_confirmed', 'order_shipped', 'order_delivered', 'payment_received'] &&
+        request.resource.data.title is string && request.resource.data.title.size() <= 160 &&
+        request.resource.data.message is string && request.resource.data.message.size() <= 1000 &&
+        request.resource.data.read is bool && request.resource.data.createdAt is number &&
+        request.resource.data.sentVia in ['sms', 'email', 'in-app'];
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && validProduct();
+      allow delete: if isAdmin();
+    }
+
+    match /customers/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && validCustomer() &&
+        (request.resource.data.role == 'CUSTOMER' || isAdmin());
+      allow update: if isAdmin() || (isOwner(userId) && validCustomer() &&
+        request.resource.data.role == resource.data.role);
+      allow delete: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow get: if isOwner(resource.data.userId) || isAdmin();
+      allow list: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      allow create: if signedIn() && validOrder();
+      allow update, delete: if isAdmin();
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if signedIn() && validReview();
+      allow update: if isAdmin() || (isOwner(resource.data.userId) && validReview() &&
+        request.resource.data.userId == resource.data.userId &&
+        request.resource.data.productId == resource.data.productId &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        request.resource.data.userName == resource.data.userName &&
+        request.resource.data.helpful == resource.data.helpful);
+      allow delete: if isAdmin() || isOwner(resource.data.userId);
+    }
+
+    match /notifications/{notificationId} {
+      allow get: if isOwner(resource.data.userId) || isAdmin();
+      allow list: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      allow create: if signedIn() && validNotification();
+      allow update: if isAdmin() || (isOwner(resource.data.userId) &&
+        validNotification() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']) &&
+        request.resource.data.read == true);
+      allow delete: if isAdmin();
+    }
+
+    match /site-stats/community {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
