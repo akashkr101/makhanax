@@ -1,6 +1,7 @@
 {
   "projects": {
-    "default": "makhanax-01",
+    "default": "makhanax-dev-2026",
+    "development": "makhanax-dev-2026",
     "test": "makhanax-01",
     "production": "makhanax-prod-2026"
   },
