@@ -85,9 +85,10 @@ export class AuthService {
       const existingRole = snapshot.data()?.['role'] as UserRole | undefined;
       const normalizedEmail = email.trim().toLowerCase();
       const configuredRole: UserRole = environment.adminEmails?.includes(normalizedEmail) ? 'ADMIN' : 'CUSTOMER';
+      const assignedRole = configuredRole === 'ADMIN' ? 'ADMIN' : existingRole ?? 'CUSTOMER';
       await setDoc(customerDoc, {
         displayName, email, phoneNumber,
-        role: existingRole ?? configuredRole,
+        role: assignedRole,
         updatedAt: new Date().toISOString()
       }, { merge: true });
       if (!snapshot.exists()) {
@@ -100,7 +101,7 @@ export class AuthService {
           console.error('Updating customer count failed:', statsError);
         }
       }
-      this.role.set(existingRole ?? configuredRole);
+      this.role.set(assignedRole);
     } catch (error: unknown) {
       console.error('Syncing customer directory failed:', error);
       this.role.set('CUSTOMER');
