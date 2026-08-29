@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { FirebaseApp, initializeApp } from 'firebase/app';
-import { Auth, ConfirmationResult, RecaptchaVerifier, createUserWithEmailAndPassword, getAuth, onAuthStateChanged, sendEmailVerification, signInWithEmailAndPassword, signInWithPhoneNumber, signOut, updateProfile } from 'firebase/auth';
+import { Auth, ConfirmationResult, RecaptchaVerifier, createUserWithEmailAndPassword, getAuth, onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPhoneNumber, signOut, updateProfile } from 'firebase/auth';
 import { doc, getDoc, getFirestore, increment, setDoc } from 'firebase/firestore';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from './notification.service';
@@ -214,6 +214,27 @@ export class AuthService {
       this.error.set(this.getEmailError(error));
       console.error('Firebase email authentication failed:', error);
       return false;
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  async requestPasswordReset(email: string): Promise<void> {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!this.isValidEmail(normalizedEmail)) {
+      this.error.set('Enter your email address first, then select Forgot password.');
+      return;
+    }
+
+    this.loading.set(true);
+    this.error.set('');
+    this.success.set('');
+    try {
+      await sendPasswordResetEmail(this.auth, normalizedEmail);
+      this.success.set('If an account exists for this email, we sent a password reset link.');
+    } catch (error: unknown) {
+      this.error.set(this.getEmailError(error));
+      console.error('Sending password reset email failed:', error);
     } finally {
       this.loading.set(false);
     }

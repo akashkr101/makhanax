@@ -55,6 +55,11 @@
 .otp-form { gap: 2px; margin-top: 18px; }
 .otp-form input { font-size: 16px; letter-spacing: .04em; padding: 11px 0; }
 .otp-form .button { margin-top: 18px; }
+.password-field { position: relative; }
+.password-field input { padding-right: 42px; width: 100%; }
+.password-visibility { align-items: center; background: transparent; border: 0; bottom: 1px; color: var(--ink); cursor: pointer; display: inline-flex; font-size: 24px; height: 38px; justify-content: center; padding: 0; position: absolute; right: 0; width: 38px; }
+.password-visibility:hover { color: var(--coral); }
+.password-visibility:focus-visible { outline: 2px solid var(--coral); outline-offset: -2px; }
 .login-legal { margin-top: 18px; }
 .profile-modal .profile-detail { font-size: 13px; }
 .profile-avatar-row { align-items: center; display: flex; gap: 14px; margin: 14px 0 4px; }

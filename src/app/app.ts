@@ -41,6 +41,7 @@ export class App implements OnInit {
   protected readonly authSuccess = this.authService.success;
   protected readonly authLoading = this.authService.loading;
   protected readonly emailAuthMode = this.authService.emailMode;
+  protected readonly showPassword = signal(false);
   protected readonly isAuthenticated = this.authService.isAuthenticated;
   protected readonly customerProfile = this.authService.customerProfile;
   protected readonly cartOpen = signal(false);
@@ -88,6 +89,15 @@ export class App implements OnInit {
 
   protected closeLogin(): void {
     this.authService.closeLogin();
+    this.showPassword.set(false);
+  }
+
+  protected closeLoginFromBackdrop(event: MouseEvent): void {
+    if (event.target === event.currentTarget) this.closeLogin();
+  }
+
+  protected togglePasswordVisibility(): void {
+    this.showPassword.update((visible) => !visible);
   }
 
   protected openProfile(): void {
@@ -182,6 +192,12 @@ export class App implements OnInit {
       credentials.get('password')?.toString() ?? ''
     );
     if (authenticated) this.completeLogin();
+  }
+
+  protected async requestPasswordReset(event: Event): Promise<void> {
+    const form = (event.currentTarget as HTMLElement).closest('form');
+    const email = form ? new FormData(form).get('email')?.toString() ?? '' : '';
+    await this.authService.requestPasswordReset(email);
   }
 
   private completeLogin(): void {
