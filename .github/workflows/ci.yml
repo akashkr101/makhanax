@@ -9,6 +9,7 @@ on:
 permissions:
   contents: read
   packages: write
+  security-events: write
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -31,6 +32,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Build development application
         if: github.ref_name == 'dev' || github.event_name == 'pull_request'
         run: npm run build:dev
@@ -42,6 +46,15 @@ jobs:
       - name: Build production application
         if: github.ref_name == 'prod'
         run: npm run build:production
+
+      - name: Upload validated web artifact
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-${{ github.ref_name }}-${{ github.sha }}
+          path: dist/makhana-x/browser
+          if-no-files-found: error
+          retention-days: 14
 
   publish-development-image:
     if: github.event_name == 'push' && github.ref_name == 'dev'
@@ -65,6 +78,7 @@ jobs:
           context: .
           push: true
           build-args: BUILD_CONFIGURATION=development
+          provenance: mode=max
           tags: |
             ghcr.io/${{ github.repository }}:dev-latest
             ghcr.io/${{ github.repository }}:dev-${{ github.sha }}
@@ -91,6 +105,7 @@ jobs:
           context: .
           push: true
           build-args: BUILD_CONFIGURATION=test
+          provenance: mode=max
           tags: |
             ghcr.io/${{ github.repository }}:test-latest
             ghcr.io/${{ github.repository }}:test-${{ github.sha }}
@@ -117,6 +132,7 @@ jobs:
           context: .
           push: true
           build-args: BUILD_CONFIGURATION=production
+          provenance: mode=max
           tags: |
             ghcr.io/${{ github.repository }}:prod-latest
             ghcr.io/${{ github.repository }}:prod-${{ github.sha }}
