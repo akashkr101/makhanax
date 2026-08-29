@@ -1,0 +1,88 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [dev, test, prod]
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: cd-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-development:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'dev'
+    name: Deploy development site
+    runs-on: ubuntu-latest
+    environment:
+      name: development
+      url: https://makhanax-dev-2026.web.app
+    steps:
+      - name: Download validated web artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-dev-${{ github.event.workflow_run.head_sha }}
+          path: dist/makhana-x/browser
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DEVELOPMENT }}
+          channelId: live
+          projectId: makhanax-dev-2026
+
+  deploy-test:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'test'
+    name: Deploy test site
+    runs-on: ubuntu-latest
+    environment:
+      name: test
+      url: https://makhanax-01.web.app
+    steps:
+      - name: Download validated web artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-test-${{ github.event.workflow_run.head_sha }}
+          path: dist/makhana-x/browser
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MAKHANAX_01 }}
+          channelId: live
+          projectId: makhanax-01
+
+  deploy-production:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'prod'
+    name: Deploy production site
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://makhanax-prod-2026.web.app
+    steps:
+      - name: Download validated web artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-prod-${{ github.event.workflow_run.head_sha }}
+          path: dist/makhana-x/browser
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PRODUCTION }}
+          channelId: live
+          projectId: makhanax-prod-2026
