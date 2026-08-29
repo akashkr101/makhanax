@@ -1,0 +1,14 @@
+.angular
+.firebase
+.git
+.github
+.idea
+.vscode
+dist
+functions
+node_modules
+coverage
+npm-debug.log
+README.md
+ALL_FEATURES_IMPLEMENTED.md
+FEATURE_IMPLEMENTATION.md

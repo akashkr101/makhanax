@@ -1,6 +1,8 @@
 {
   "projects": {
-    "default": "makhanax-01"
+    "default": "makhanax-01",
+    "test": "makhanax-01",
+    "production": "makhanax-prod-2026"
   },
   "targets": {},
   "etags": {}
