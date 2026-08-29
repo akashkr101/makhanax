@@ -5,6 +5,7 @@ export interface AppConfig {
   paymentProvider: 'razorpay' | 'cashfree' | 'stripe' | 'mock';
   otpProvider: 'firebase' | 'twilio' | 'msg91' | 'mock';
   enableCashOnDelivery: boolean;
+  adminEmails?: string[];
   emailjs?: {
     serviceId: string;
     templateId: string;
