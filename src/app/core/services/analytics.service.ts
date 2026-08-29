@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { getApp, getApps } from 'firebase/app';
-import { collection, getDocs, getFirestore, query, where } from 'firebase/firestore';
+import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import { ProductReview } from './reviews.service';
 
 export interface ProductAnalytics {
@@ -8,7 +8,6 @@ export interface ProductAnalytics {
   productName: string;
   averageRating: number;
   totalReviews: number;
-  totalWishlistAdds: number;
   salesCount: number;
   revenue: number;
 }
@@ -18,12 +17,6 @@ export interface CustomerSatisfaction {
   totalReviews: number;
   ratingsDistribution: Record<number, number>;
   ratingsByCategory: Record<string, number>;
-}
-
-export interface WishlistAnalytics {
-  totalWishlistItems: number;
-  popularWishlistProducts: Array<{ name: string; count: number }>;
-  wishlistAddRate: number;
 }
 
 export interface EngagementMetrics {
@@ -151,50 +144,4 @@ export class AnalyticsService {
     }
   }
 
-  async getWishlistAnalytics(): Promise<WishlistAnalytics> {
-    try {
-      if (!this.firestore) {
-        return {
-          totalWishlistItems: 0,
-          popularWishlistProducts: [],
-          wishlistAddRate: 0
-        };
-      }
-
-      const usersRef = collection(this.firestore, 'users');
-      const usersSnapshot = await getDocs(usersRef);
-      
-      let totalWishlistItems = 0;
-      const productWishlistCounts = new Map<string, number>();
-
-      for (const userDoc of usersSnapshot.docs) {
-        const wishlistRef = collection(this.firestore, `users/${userDoc.id}/wishlist`);
-        const wishlistSnapshot = await getDocs(wishlistRef);
-        totalWishlistItems += wishlistSnapshot.size;
-        
-        for (const wishlistDoc of wishlistSnapshot.docs) {
-          const productId = wishlistDoc.id;
-          productWishlistCounts.set(productId, (productWishlistCounts.get(productId) ?? 0) + 1);
-        }
-      }
-
-      const popularWishlistProducts = [...productWishlistCounts.entries()]
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10)
-        .map(([name, count]) => ({ name, count }));
-
-      return {
-        totalWishlistItems,
-        popularWishlistProducts,
-        wishlistAddRate: usersSnapshot.size > 0 ? totalWishlistItems / usersSnapshot.size : 0
-      };
-    } catch (error) {
-      console.error('Getting wishlist analytics failed:', error);
-      return {
-        totalWishlistItems: 0,
-        popularWishlistProducts: [],
-        wishlistAddRate: 0
-      };
-    }
-  }
 }

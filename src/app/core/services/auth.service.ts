@@ -3,7 +3,6 @@ import { FirebaseApp, initializeApp } from 'firebase/app';
 import { Auth, ConfirmationResult, RecaptchaVerifier, createUserWithEmailAndPassword, getAuth, onAuthStateChanged, sendEmailVerification, signInWithEmailAndPassword, signInWithPhoneNumber, signOut, updateProfile } from 'firebase/auth';
 import { doc, getDoc, getFirestore, increment, setDoc } from 'firebase/firestore';
 import { environment } from '../../../environments/environment';
-import { WishlistService } from './wishlist.service';
 import { NotificationService } from './notification.service';
 
 export type AuthStep = 'phone' | 'verification' | 'email' | 'verified';
@@ -17,7 +16,6 @@ export interface CustomerProfile {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly wishlistService = inject(WishlistService);
   private readonly notificationService = inject(NotificationService);
   
   readonly step = signal<AuthStep>('phone');
@@ -57,7 +55,6 @@ export class AuthService {
       if (user) {
         this.step.set('verified');
         this.roleLoading.set(true);
-        this.wishlistService.setUserId(user.uid);
         this.notificationService.setUserId(user.uid);
         this.roleResolution = this.syncCustomerDirectory(user.uid, user.displayName ?? '', user.email ?? '', user.phoneNumber ?? '')
           .finally(() => this.roleLoading.set(false));
@@ -65,7 +62,6 @@ export class AuthService {
         this.role.set(null);
         this.roleLoading.set(false);
         this.roleResolution = Promise.resolve();
-        this.wishlistService.setUserId('');
         this.notificationService.setUserId('');
       }
       if (!this.authReadyResolved) {
