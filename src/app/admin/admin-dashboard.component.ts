@@ -7,7 +7,7 @@ import { CustomerDirectoryService, CustomerRecord } from '../core/services/custo
 import { OrderEmailService } from '../core/services/order-email.service';
 import { OrderHistoryService, OrderRecord, OrderStatus } from '../core/services/order-history.service';
 import { ProductService } from '../core/services/product.service';
-import { AnalyticsService, CustomerSatisfaction, EngagementMetrics, WishlistAnalytics } from '../core/services/analytics.service';
+import { AnalyticsService, CustomerSatisfaction, EngagementMetrics } from '../core/services/analytics.service';
 import { MakhanaCategory, Product } from '../models/product';
 
 type AdminSection = 'overview' | 'products' | 'orders' | 'customers' | 'reports';
@@ -63,7 +63,6 @@ export class AdminDashboardComponent implements OnInit {
   // Analytics signals
   protected readonly customerSatisfaction = signal<CustomerSatisfaction | null>(null);
   protected readonly engagementMetrics = signal<EngagementMetrics | null>(null);
-  protected readonly wishlistAnalytics = signal<WishlistAnalytics | null>(null);
 
   protected readonly todaysRevenue = computed(() => {
     const today = new Date().toDateString();
@@ -187,8 +186,6 @@ export class AdminDashboardComponent implements OnInit {
       );
       this.engagementMetrics.set(engagement);
 
-      const wishlist = await this.analyticsService.getWishlistAnalytics();
-      this.wishlistAnalytics.set(wishlist);
     } catch (error) {
       console.error('Failed to load analytics:', error);
     }
