@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: https://makhanax-prod-2026.web.app
+      url: https://makhanax-prod.web.app
     steps:
       - name: Download validated web artifact
         uses: actions/download-artifact@v4
@@ -85,4 +85,4 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PRODUCTION }}
           channelId: live
-          projectId: makhanax-prod-2026
+          projectId: makhanax-prod

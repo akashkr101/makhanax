@@ -3,7 +3,7 @@
     "default": "makhanax-dev-2026",
     "development": "makhanax-dev-2026",
     "test": "makhanax-test",
-    "production": "makhanax-prod-2026"
+    "production": "makhanax-prod"
   },
   "targets": {},
   "etags": {}

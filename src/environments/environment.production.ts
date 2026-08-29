@@ -11,11 +11,11 @@ export const environment: AppConfig = {
     publicKey: 'qMTc464mSllCY1IHS'
   },
   firebase: {
-    apiKey: 'AIzaSyAyuTSYPKqLvVT51YooWv2MlA_SwHFmT80',
-    authDomain: 'makhanax-prod-2026.firebaseapp.com',
-    projectId: 'makhanax-prod-2026',
-    storageBucket: 'makhanax-prod-2026.firebasestorage.app',
-    messagingSenderId: '699539522319',
-    appId: '1:699539522319:web:952e0e393dd2a7de40747a'
+    apiKey: 'AIzaSyAex6h7NZ4w4o10vlKWcRJldn0s0RWxhSI',
+    authDomain: 'makhanax-prod.firebaseapp.com',
+    projectId: 'makhanax-prod',
+    storageBucket: 'makhanax-prod.firebasestorage.app',
+    messagingSenderId: '293061390678',
+    appId: '1:293061390678:web:458453c7327c71649ee6f7'
   }
 };
