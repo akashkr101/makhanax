@@ -7,6 +7,7 @@ import { CustomerDirectoryService, CustomerRecord } from '../core/services/custo
 import { OrderEmailService } from '../core/services/order-email.service';
 import { OrderHistoryService, OrderRecord, OrderStatus } from '../core/services/order-history.service';
 import { ProductService } from '../core/services/product.service';
+import { AnalyticsService, CustomerSatisfaction, EngagementMetrics, WishlistAnalytics } from '../core/services/analytics.service';
 import { MakhanaCategory, Product } from '../models/product';
 
 type AdminSection = 'overview' | 'products' | 'orders' | 'customers' | 'reports';
@@ -39,6 +40,7 @@ export class AdminDashboardComponent implements OnInit {
   private readonly orderEmailService = inject(OrderEmailService);
   protected readonly orderHistoryService = inject(OrderHistoryService);
   protected readonly customerDirectoryService = inject(CustomerDirectoryService);
+  private readonly analyticsService = inject(AnalyticsService);
 
   protected readonly section = signal<AdminSection>('overview');
   protected readonly customerName = this.authService.customerProfile;
@@ -57,6 +59,11 @@ export class AdminDashboardComponent implements OnInit {
   protected readonly orderActionError = signal('');
   protected readonly orderActionNotice = signal('');
   protected readonly updatingOrderId = signal<string | null>(null);
+  
+  // Analytics signals
+  protected readonly customerSatisfaction = signal<CustomerSatisfaction | null>(null);
+  protected readonly engagementMetrics = signal<EngagementMetrics | null>(null);
+  protected readonly wishlistAnalytics = signal<WishlistAnalytics | null>(null);
 
   protected readonly todaysRevenue = computed(() => {
     const today = new Date().toDateString();
@@ -166,6 +173,25 @@ export class AdminDashboardComponent implements OnInit {
     void this.productService.load();
     void this.orderHistoryService.loadAll();
     void this.customerDirectoryService.loadAll();
+    void this.loadAnalytics();
+  }
+
+  private async loadAnalytics(): Promise<void> {
+    try {
+      const satisfaction = await this.analyticsService.getCustomerSatisfaction();
+      this.customerSatisfaction.set(satisfaction);
+
+      const engagement = await this.analyticsService.getEngagementMetrics(
+        this.customerDirectoryService.customers().length,
+        this.orderHistoryService.allOrders().length
+      );
+      this.engagementMetrics.set(engagement);
+
+      const wishlist = await this.analyticsService.getWishlistAnalytics();
+      this.wishlistAnalytics.set(wishlist);
+    } catch (error) {
+      console.error('Failed to load analytics:', error);
+    }
   }
 
   protected selectSection(section: AdminSection): void {

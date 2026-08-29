@@ -10,6 +10,8 @@ export interface Product {
   tone: string;
   description: string;
   stock?: number;
+  averageRating?: number;
+  totalReviews?: number;
 }
 
 export interface CartItem {

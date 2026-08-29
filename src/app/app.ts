@@ -5,15 +5,17 @@ import { CartDrawerComponent } from './components/cart-drawer/cart-drawer.compon
 import { CheckoutComponent } from './components/checkout/checkout.component';
 import { CustomerCounterComponent } from './components/customer-counter/customer-counter.component';
 import { ProductCatalogComponent } from './components/product-catalog/product-catalog.component';
+import { WishlistComponent } from './components/wishlist/wishlist.component';
 import { AuthService, EmailAuthMode } from './core/services/auth.service';
 import { CartService } from './core/services/cart.service';
 import { CustomerDirectoryService } from './core/services/customer-directory.service';
 import { OrderHistoryService } from './core/services/order-history.service';
+import { WishlistService } from './core/services/wishlist.service';
 import { Product } from './models/product';
 
 @Component({
   selector: 'app-root',
-  imports: [ProductCatalogComponent, CartDrawerComponent, CheckoutComponent, CustomerCounterComponent, UpperCasePipe],
+  imports: [ProductCatalogComponent, CartDrawerComponent, CheckoutComponent, CustomerCounterComponent, WishlistComponent, UpperCasePipe],
   templateUrl: './app.html',
   styleUrls: ['./app.scss', './app-overrides.scss'],
 })
@@ -22,6 +24,7 @@ export class App implements OnInit {
   private readonly cartService = inject(CartService);
   private readonly customerDirectoryService = inject(CustomerDirectoryService);
   private readonly orderHistoryService = inject(OrderHistoryService);
+  private readonly wishlistService = inject(WishlistService);
   private readonly router = inject(Router);
   protected readonly role = this.authService.role;
   protected readonly loginOpen = this.authService.loginOpen;
@@ -58,6 +61,8 @@ export class App implements OnInit {
   protected readonly cartItemCount = this.cartService.itemCount;
   protected readonly totalCustomers = this.customerDirectoryService.totalCustomers;
   protected readonly headerHidden = signal(false);
+  protected readonly wishlistOpen = signal(false);
+  protected readonly wishlistCount = this.wishlistService.count;
   private lastScrollPosition = 0;
 
   ngOnInit(): void {
@@ -227,5 +232,18 @@ export class App implements OnInit {
     this.cartService.clear();
     this.orderConfirmation.set(true);
     window.setTimeout(() => this.orderConfirmation.set(false), 5000);
+  }
+
+  protected openWishlist(): void {
+    this.wishlistOpen.set(true);
+  }
+
+  protected closeWishlist(): void {
+    this.wishlistOpen.set(false);
+  }
+
+  protected addWishlistItemToCart(product: Product): void {
+    this.addToCart(product);
+    this.wishlistOpen.set(false);
   }
 }

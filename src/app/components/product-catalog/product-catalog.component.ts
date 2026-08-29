@@ -28,7 +28,11 @@ export class ProductCatalogComponent implements OnInit {
   }
 
   protected selectedProduct(category: MakhanaCategory): Product {
-    return this.products().find((product) => product.category === category && product.size === this.selectedSize()[category]) ?? this.products()[0];
+    const productsInCategory = this.products().filter((product) => product.category === category);
+    return productsInCategory.find((product) => product.size === this.selectedSize()[category])
+      ?? PRODUCTS.find((product) => product.category === category && product.size === '250g')
+      ?? productsInCategory[0]
+      ?? PRODUCTS[0];
   }
 
   protected setSize(category: MakhanaCategory, size: string): void {
