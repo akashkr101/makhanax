@@ -58,8 +58,9 @@ export class ProductService {
   }
 
   async updateProduct(id: string, changes: Partial<Product>): Promise<void> {
-    await setDoc(doc(this.firestore, 'products', id), changes, { merge: true });
-    this.products.update((products) => products.map((product) => product.id === id ? { ...product, ...changes } : product));
+    const { id: _ignoredId, ...productChanges } = changes;
+    await setDoc(doc(this.firestore, 'products', id), productChanges, { merge: true });
+    this.products.update((products) => products.map((product) => product.id === id ? { ...product, ...productChanges } : product));
   }
 
   async deleteProduct(id: string): Promise<void> {
@@ -69,7 +70,8 @@ export class ProductService {
 
   async setStock(id: string, stock: number): Promise<void> {
     const product = this.products().find((candidate) => candidate.id === id);
-    await setDoc(doc(this.firestore, 'products', id), product ? { ...product, stock } : { stock }, { merge: true });
+    if (!product) throw new Error(`Could not find product ${id}.`);
+    await setDoc(doc(this.firestore, 'products', id), this.toFirestoreProduct({ ...product, stock }), { merge: true });
     this.products.update((products) => products.map((product) => product.id === id ? { ...product, stock } : product));
   }
 
@@ -79,10 +81,10 @@ export class ProductService {
 
     for (const product of this.withDefaultStock(PRODUCTS)) {
       const currentProduct = this.products().find((candidate) => candidate.id === product.id);
-      batch.set(doc(this.firestore, 'products', product.id), {
+      batch.set(doc(this.firestore, 'products', product.id), this.toFirestoreProduct({
         ...product,
         stock: currentProduct?.stock ?? product.stock ?? defaultInitialStock
-      }, { merge: true });
+      }), { merge: true });
       existingIds.add(product.id);
     }
 
@@ -175,6 +177,11 @@ export class ProductService {
     return name.trim().toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '') || `product-${Date.now()}`;
+  }
+
+  private toFirestoreProduct(product: Product): Omit<Product, 'id'> {
+    const { id: _ignoredId, ...productData } = product;
+    return productData;
   }
 
   private withDefaultStock(product: Product): Product;
