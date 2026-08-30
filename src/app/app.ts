@@ -27,14 +27,6 @@ export class App implements OnInit {
   protected readonly loginOpen = this.authService.loginOpen;
   protected readonly phoneNumber = this.authService.phoneNumber;
   protected readonly localPhoneNumber = signal('');
-  protected readonly countryCode = signal('+91');
-  protected readonly countryCodes = [
-    { code: '+91', name: 'India' },
-    { code: '+1', name: 'United States' },
-    { code: '+44', name: 'United Kingdom' },
-    { code: '+61', name: 'Australia' },
-    { code: '+971', name: 'UAE' }
-  ];
   protected readonly otpSent = computed(() => this.authService.step() === 'verification');
   protected readonly emailAuthOpen = computed(() => this.authService.step() === 'email');
   protected readonly authError = this.authService.error;
@@ -160,7 +152,7 @@ export class App implements OnInit {
 
   protected async requestOtp(event: Event): Promise<void> {
     event.preventDefault();
-    await this.authService.requestOtp(this.countryCode(), this.localPhoneNumber());
+    await this.authService.requestOtp(this.localPhoneNumber());
   }
 
   protected async verifyOtp(event: Event): Promise<void> {
