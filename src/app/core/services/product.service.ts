@@ -5,6 +5,8 @@ import { environment } from '../../../environments/environment';
 import { PRODUCTS } from '../../data/product-data';
 import { Product } from '../../models/product';
 
+const defaultInitialStock = 25;
+
 interface StockLineItem {
   productId?: string;
   name: string;
@@ -14,7 +16,7 @@ interface StockLineItem {
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
-  readonly products = signal<Product[]>(PRODUCTS);
+  readonly products = signal<Product[]>(this.withDefaultStock(PRODUCTS));
   readonly error = signal('');
   readonly loaded = signal(false);
 
@@ -29,13 +31,15 @@ export class ProductService {
         const cloudById = new Map(cloudProducts.map((product) => [product.id, product]));
         const defaultProducts = PRODUCTS.map((product) => {
           const cloudProduct = cloudById.get(product.id);
-          return cloudProduct ? { ...product, ...cloudProduct, id: product.id, category: product.category, size: product.size } : product;
+          return this.withDefaultStock(cloudProduct ? { ...product, ...cloudProduct, id: product.id, category: product.category, size: product.size } : product);
         });
         const defaultProductIds = new Set(PRODUCTS.map((product) => product.id));
         const customProducts = cloudProducts
           .filter((product) => !defaultProductIds.has(product.id))
-          .map((product) => ({ ...product, size: product.size?.trim() || '250g' }));
+          .map((product) => this.withDefaultStock({ ...product, size: product.size?.trim() || '250g' }));
         this.products.set([...defaultProducts, ...customProducts]);
+      } else {
+        this.products.set(this.withDefaultStock(PRODUCTS));
       }
       this.error.set('');
     } catch (error: unknown) {
@@ -47,7 +51,7 @@ export class ProductService {
   }
 
   async addProduct(product: Omit<Product, 'id'>): Promise<void> {
-    const productToSave = { ...product, size: product.size.trim() || '250g' };
+    const productToSave = { ...product, size: product.size.trim() || '250g', stock: product.stock ?? defaultInitialStock };
     const id = await this.createProductDocumentId(product.name);
     await setDoc(doc(this.firestore, 'products', id), productToSave);
     this.products.update((products) => [...products, { ...productToSave, id }]);
@@ -64,8 +68,26 @@ export class ProductService {
   }
 
   async setStock(id: string, stock: number): Promise<void> {
-    await updateDoc(doc(this.firestore, 'products', id), { stock });
+    const product = this.products().find((candidate) => candidate.id === id);
+    await setDoc(doc(this.firestore, 'products', id), product ? { ...product, stock } : { stock }, { merge: true });
     this.products.update((products) => products.map((product) => product.id === id ? { ...product, stock } : product));
+  }
+
+  async ensureDefaultProducts(): Promise<void> {
+    const batch = writeBatch(this.firestore);
+    const existingIds = new Set(this.products().map((product) => product.id));
+
+    for (const product of this.withDefaultStock(PRODUCTS)) {
+      const currentProduct = this.products().find((candidate) => candidate.id === product.id);
+      batch.set(doc(this.firestore, 'products', product.id), {
+        ...product,
+        stock: currentProduct?.stock ?? product.stock ?? defaultInitialStock
+      }, { merge: true });
+      existingIds.add(product.id);
+    }
+
+    await batch.commit();
+    this.products.set(this.withDefaultStock(this.products().map((product) => existingIds.has(product.id) ? product : product)));
   }
 
   async confirmOrderStock(items: StockLineItem[]): Promise<void> {
@@ -153,5 +175,12 @@ export class ProductService {
     return name.trim().toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '') || `product-${Date.now()}`;
+  }
+
+  private withDefaultStock(product: Product): Product;
+  private withDefaultStock(products: Product[]): Product[];
+  private withDefaultStock(productOrProducts: Product | Product[]): Product | Product[] {
+    if (Array.isArray(productOrProducts)) return productOrProducts.map((product) => this.withDefaultStock(product));
+    return { ...productOrProducts, stock: productOrProducts.stock ?? defaultInitialStock };
   }
 }
