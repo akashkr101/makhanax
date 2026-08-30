@@ -40,7 +40,11 @@ export class ProductCatalogComponent implements OnInit {
   }
 
   protected scrollCarousel(track: HTMLElement, direction: -1 | 1): void {
-    track.scrollBy({ left: direction * Math.max(track.clientWidth * 0.85, 280), behavior: 'smooth' });
+    const firstCard = track.querySelector<HTMLElement>('.catalog-card');
+    if (!firstCard) return;
+
+    const gap = Number.parseFloat(getComputedStyle(track).columnGap || '0') || 0;
+    track.scrollBy({ left: direction * (firstCard.offsetWidth + gap), behavior: 'smooth' });
   }
 
   protected formatPrice(price: number): string {
