@@ -5,18 +5,18 @@ export const environment: AppConfig = {
   paymentProvider: 'mock',
   otpProvider: 'firebase',
   enableCashOnDelivery: true,
+  adminEmails: ['akrocks63@gmail.com'],
   emailjs: {
     serviceId: 'service_eem8q09',
     templateId: 'template_pfd7b68',
     publicKey: 'qMTc464mSllCY1IHS'
   },
   firebase: {
-    apiKey: 'AIzaSyBAhvhO4V2D5ej5YuF2SFLSgYHSUD-3240',
-    authDomain: 'makhanax-01.firebaseapp.com',
-    projectId: 'makhanax-01',
-    storageBucket: 'makhanax-01.firebasestorage.app',
-    messagingSenderId: '647187637605',
-    appId: '1:647187637605:web:792bb28e8ba0f3fc56ad8c',
-    measurementId: 'G-GWCMFVHXN3'
+    apiKey: 'AIzaSyAQlPLhrSezJAOGTzmBL0jOulvgivYu5m0',
+    authDomain: 'makhanax-dev.firebaseapp.com',
+    projectId: 'makhanax-dev',
+    storageBucket: 'makhanax-dev.firebasestorage.app',
+    messagingSenderId: '126320697715',
+    appId: '1:126320697715:web:39fa8836880ea46f252506'
   }
 };
