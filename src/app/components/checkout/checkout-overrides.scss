@@ -63,6 +63,10 @@
 .checkout-form label { font-size: 9px; margin-top: 14px; }
 .checkout-form input:not([type=radio]), .checkout-form textarea { font-size: 15px; padding: 10px 0; }
 .payment-heading { margin-top: 28px; }
+.payment-card-grid { display: grid; gap: 12px; grid-template-columns: repeat(3, 1fr); }
+.payment-card-grid label { margin-top: 14px; }
+.checkout-form select { background: transparent; border: 0; border-bottom: 1px solid rgba(27, 28, 23, .35); color: var(--ink); font: inherit; outline: none; padding: 10px 0; }
+.checkout-form select:focus { border-color: var(--coral); }
 .order-summary { align-self: start; box-shadow: 5px 5px 0 rgba(27, 28, 23, .12); padding: 24px 22px; position: sticky; top: 16px; }
 .summary-item { font-size: 11px; padding: 11px 0; }
 .summary-item .money-value { font-size: 12px !important; }
@@ -72,6 +76,7 @@
 
 @media (max-width: 700px) {
   .address-category-tabs { grid-template-columns: repeat(2, 1fr); }
+  .payment-card-grid { grid-template-columns: 1fr; }
   .address-selection { grid-template-columns: 1fr; }
   .save-address { height: 44px; width: 100%; }
   .checkout-backdrop { align-items: end; padding: 0; }

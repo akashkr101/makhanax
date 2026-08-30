@@ -27,7 +27,7 @@ export class CheckoutComponent {
   readonly items = input<CartItem[]>([]);
   readonly back = output<void>();
   readonly orderPlaced = output<void>();
-  protected paymentMethod = 'upi';
+  protected paymentMethod: PaymentDetails['method'] = 'cod';
   protected addressCategory: AddressCategory = 'home';
   protected fullName = '';
   protected emailAddress = '';
@@ -129,7 +129,7 @@ export class CheckoutComponent {
 
       // Process payment
       const paymentDetails: PaymentDetails = {
-        method: this.paymentMethod as 'upi' | 'card' | 'netbanking',
+        method: this.paymentMethod,
         upiId: this.paymentMethod === 'upi' ? (document.querySelector('#upi-id') as HTMLInputElement)?.value : undefined,
         cardNumber: this.paymentMethod === 'card' ? (document.querySelector('#card-number') as HTMLInputElement)?.value : undefined,
         cardholderName: this.paymentMethod === 'card' ? this.fullName : undefined,
