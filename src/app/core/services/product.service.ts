@@ -59,7 +59,9 @@ export class ProductService {
 
   async updateProduct(id: string, changes: Partial<Product>): Promise<void> {
     const { id: _ignoredId, ...productChanges } = changes;
-    await setDoc(doc(this.firestore, 'products', id), productChanges, { merge: true });
+    const currentProduct = this.products().find((product) => product.id === id);
+    const nextProduct = this.withDefaultStock({ ...currentProduct, ...productChanges, id } as Product);
+    await setDoc(doc(this.firestore, 'products', id), this.toFirestoreProduct(nextProduct));
     this.products.update((products) => products.map((product) => product.id === id ? { ...product, ...productChanges } : product));
   }
 
@@ -71,7 +73,7 @@ export class ProductService {
   async setStock(id: string, stock: number): Promise<void> {
     const product = this.products().find((candidate) => candidate.id === id);
     if (!product) throw new Error(`Could not find product ${id}.`);
-    await setDoc(doc(this.firestore, 'products', id), this.toFirestoreProduct({ ...product, stock }), { merge: true });
+    await setDoc(doc(this.firestore, 'products', id), this.toFirestoreProduct({ ...product, stock }));
     this.products.update((products) => products.map((product) => product.id === id ? { ...product, stock } : product));
   }
 
@@ -84,7 +86,7 @@ export class ProductService {
       batch.set(doc(this.firestore, 'products', product.id), this.toFirestoreProduct({
         ...product,
         stock: currentProduct?.stock ?? product.stock ?? defaultInitialStock
-      }), { merge: true });
+      }));
       existingIds.add(product.id);
     }
 
