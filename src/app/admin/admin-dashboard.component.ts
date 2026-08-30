@@ -169,10 +169,20 @@ export class AdminDashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.restoreSection();
-    void this.productService.load();
+    void this.loadProducts();
     void this.orderHistoryService.loadAll();
     void this.customerDirectoryService.loadAll();
     void this.loadAnalytics();
+  }
+
+  private async loadProducts(): Promise<void> {
+    await this.productService.load();
+    try {
+      await this.productService.ensureDefaultProducts();
+      await this.productService.load();
+    } catch (error) {
+      console.error('Seeding default products failed:', error);
+    }
   }
 
   private async loadAnalytics(): Promise<void> {
