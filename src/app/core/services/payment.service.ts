@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 
 export interface PaymentDetails {
-  method: 'upi' | 'card' | 'netbanking';
+  method: 'upi' | 'card' | 'netbanking' | 'cod';
   upiId?: string;
   cardNumber?: string;
   cardholderName?: string;
@@ -85,6 +85,8 @@ export class PaymentService {
         return !!(details.cardNumber && details.cardholderName && details.expiryMonth && details.expiryYear && details.cvv);
       case 'netbanking':
         return !!details.bankName;
+      case 'cod':
+        return true;
       default:
         return false;
     }

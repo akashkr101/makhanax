@@ -30,11 +30,32 @@
           <textarea id="checkout-address" name="address" rows="3" [(ngModel)]="deliveryAddress" required></textarea>
           <h3 class="payment-heading">Payment method</h3>
           <div class="payment-options">
+            <label><input type="radio" name="payment" value="cod" [(ngModel)]="paymentMethod"><span>Cash on delivery<strong>Pay when it arrives</strong></span></label>
             <label><input type="radio" name="payment" value="upi" [(ngModel)]="paymentMethod"><span>UPI<strong>Google Pay · PhonePe · Paytm</strong></span></label>
             <label><input type="radio" name="payment" value="card" [(ngModel)]="paymentMethod"><span>Card<strong>Credit or debit card</strong></span></label>
             <label><input type="radio" name="payment" value="netbanking" [(ngModel)]="paymentMethod"><span>Net banking<strong>All major banks</strong></span></label>
-            <label><input type="radio" name="payment" value="cod" [(ngModel)]="paymentMethod"><span>Cash on delivery<strong>Pay when it arrives</strong></span></label>
           </div>
+          @if (paymentMethod === 'upi') {
+            <label for="upi-id">UPI ID</label>
+            <input id="upi-id" name="upiId" type="text" autocomplete="off" placeholder="name@bank" required>
+          } @else if (paymentMethod === 'card') {
+            <label for="card-number">Card number</label>
+            <input id="card-number" name="cardNumber" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="4111 1111 1111 1111" required>
+            <div class="payment-card-grid">
+              <label for="expiry-month">Month<input id="expiry-month" name="expiryMonth" type="text" inputmode="numeric" autocomplete="cc-exp-month" maxlength="2" placeholder="MM" required></label>
+              <label for="expiry-year">Year<input id="expiry-year" name="expiryYear" type="text" inputmode="numeric" autocomplete="cc-exp-year" maxlength="4" placeholder="YYYY" required></label>
+              <label for="cvv">CVV<input id="cvv" name="cvv" type="password" inputmode="numeric" autocomplete="cc-csc" maxlength="4" required></label>
+            </div>
+          } @else if (paymentMethod === 'netbanking') {
+            <label for="bank-select">Bank</label>
+            <select id="bank-select" name="bankName" required>
+              <option value="" disabled selected>Select your bank</option>
+              <option value="HDFC Bank">HDFC Bank</option>
+              <option value="ICICI Bank">ICICI Bank</option>
+              <option value="State Bank of India">State Bank of India</option>
+              <option value="Axis Bank">Axis Bank</option>
+            </select>
+          }
           <button class="pay-now-button" type="submit">
             <span class="pay-icon">✓</span>
             <span class="pay-label">Pay now</span>
