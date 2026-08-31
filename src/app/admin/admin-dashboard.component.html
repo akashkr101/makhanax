@@ -1,13 +1,18 @@
 <div class="admin-shell">
   <aside class="admin-sidebar">
     <div class="admin-brand"><span class="brand-mark">✳</span> MakhanaX <em>Admin</em></div>
-    <nav>
-      <button type="button" [class.active]="section() === 'overview'" (click)="selectSection('overview')">Dashboard</button>
-      <button type="button" [class.active]="section() === 'products'" (click)="selectSection('products')">Products</button>
-      <button type="button" [class.active]="section() === 'orders'" (click)="selectSection('orders')">Orders</button>
-      <button type="button" [class.active]="section() === 'customers'" (click)="selectSection('customers')">Customers</button>
-      <button type="button" [class.active]="section() === 'reports'" (click)="selectSection('reports')">Reports</button>
-    </nav>
+    <div class="admin-menu">
+      <button class="admin-menu-trigger" type="button" [attr.aria-expanded]="adminMenuOpen()" aria-controls="admin-menu-panel" (click)="toggleAdminMenu()"><span>{{ sectionLabel(section()) }}</span><strong aria-hidden="true">⌄</strong></button>
+      @if (adminMenuOpen()) {
+        <nav id="admin-menu-panel" class="admin-menu-panel" aria-label="Admin sections">
+          <button type="button" [class.active]="section() === 'overview'" (click)="selectSection('overview')">Dashboard</button>
+          <button type="button" [class.active]="section() === 'products'" (click)="selectSection('products')">Products</button>
+          <button type="button" [class.active]="section() === 'orders'" (click)="selectSection('orders')">Orders</button>
+          <button type="button" [class.active]="section() === 'customers'" (click)="selectSection('customers')">Customers</button>
+          <button type="button" [class.active]="section() === 'reports'" (click)="selectSection('reports')">Reports</button>
+        </nav>
+      }
+    </div>
     <div class="admin-sidebar-footer">
       <button type="button" class="admin-link" (click)="backToStore()">← Back to store</button>
       <button type="button" class="admin-link" (click)="signOut()">Sign out</button>
