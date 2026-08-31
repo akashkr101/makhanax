@@ -126,6 +126,17 @@ export class App implements OnInit {
     return `₹${price.toLocaleString('en-IN')}`;
   }
 
+  protected orderStatusDescription(status: string): string {
+    switch (status) {
+      case 'New': return 'Order received and waiting for confirmation.';
+      case 'Confirmed': return 'Order confirmed and being prepared.';
+      case 'Shipped': return 'Order is on the way.';
+      case 'Delivered': return 'Order has been delivered.';
+      case 'Cancelled': return 'Order was cancelled.';
+      default: return 'Order status is being updated.';
+    }
+  }
+
   protected startProfileEdit(): void {
     this.profileEditing.set(true);
   }
