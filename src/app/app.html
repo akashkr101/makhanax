@@ -80,6 +80,7 @@
               @for (order of orders(); track order.id) {
                 <article class="order-history-item">
                   <div class="order-history-top"><div><span>Order #{{ order.id.slice(-6) }}</span><strong>{{ formatOrderDate(order.placedAt) }}</strong></div><span class="order-status-badge" [class]="order.status.toLowerCase()">{{ order.status }}</span></div>
+                  <div class="order-history-status"><span>Status</span><strong>{{ order.status }}</strong><small>{{ orderStatusDescription(order.status) }}</small></div>
                   <ul class="order-history-items">@for (item of order.items; track item.name + item.size) { <li><div><strong>{{ item.name }}</strong><small>{{ item.size }} · Qty {{ item.quantity }}</small></div><span>{{ formatPrice(item.price * item.quantity) }}</span></li> }</ul>
                   <div class="order-history-footer"><span>{{ order.paymentMethod | uppercase }}</span><strong>{{ formatPrice(order.total) }}</strong></div>
                 </article>
