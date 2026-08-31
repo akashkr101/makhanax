@@ -2,7 +2,7 @@
   <aside class="admin-sidebar">
     <div class="admin-brand"><span class="brand-mark">✳</span> MakhanaX <em>Admin</em></div>
     <div class="admin-menu">
-      <button class="admin-menu-trigger" type="button" [attr.aria-expanded]="adminMenuOpen()" aria-controls="admin-menu-panel" (click)="toggleAdminMenu()"><span>{{ sectionLabel(section()) }}</span><strong aria-hidden="true">⌄</strong></button>
+      <button class="admin-menu-trigger" type="button" aria-label="Open admin sections menu" [attr.aria-expanded]="adminMenuOpen()" aria-controls="admin-menu-panel" (click)="toggleAdminMenu()"><span class="admin-menu-icon" aria-hidden="true"><i></i><i></i><i></i></span><span class="admin-menu-current">{{ sectionLabel(section()) }}</span></button>
       @if (adminMenuOpen()) {
         <nav id="admin-menu-panel" class="admin-menu-panel" aria-label="Admin sections">
           <button type="button" [class.active]="section() === 'overview'" (click)="selectSection('overview')">Dashboard</button>
