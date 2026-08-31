@@ -43,6 +43,7 @@ export class AdminDashboardComponent implements OnInit {
   private readonly analyticsService = inject(AnalyticsService);
 
   protected readonly section = signal<AdminSection>('overview');
+  protected readonly adminMenuOpen = signal(false);
   protected readonly customerName = this.authService.customerProfile;
   protected readonly statuses: OrderStatus[] = ['New', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
   protected readonly statusFilters: OrderStatusFilter[] = ['All', ...this.statuses];
@@ -203,6 +204,7 @@ export class AdminDashboardComponent implements OnInit {
 
   protected selectSection(section: AdminSection): void {
     this.section.set(section);
+    this.adminMenuOpen.set(false);
     try {
       localStorage.setItem(adminSectionStorageKey, section);
     } catch (error: unknown) {
@@ -221,6 +223,14 @@ export class AdminDashboardComponent implements OnInit {
 
   protected backToStore(): void {
     void this.router.navigate(['']);
+  }
+
+  protected toggleAdminMenu(): void {
+    this.adminMenuOpen.update((open) => !open);
+  }
+
+  protected sectionLabel(section: AdminSection): string {
+    return { overview: 'Dashboard', products: 'Products', orders: 'Orders', customers: 'Customers', reports: 'Reports' }[section];
   }
 
   protected async signOut(): Promise<void> {
