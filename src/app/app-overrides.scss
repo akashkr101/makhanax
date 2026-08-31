@@ -164,4 +164,11 @@
 
 .range.section { padding-bottom: 0; }
 
-.login-notice { align-items: center; animation: modal-in .28s ease both; background: #168244; bottom: 88px; box-shadow: 5px 5px 0 rgba(22, 130, 68, .25); color: #fff; display: flex; gap: 12px; max-width: min(330px, calc(100vw - 32px)); padding: 13px 14px; position: fixed; right: 24px; z-index: 45; } .login-notice > span { align-items: center; background: #d9f6e4; border-radius: 50%; color: #168244; display: inline-flex; font-weight: 700; height: 24px; justify-content: center; width: 24px; } .login-notice strong { display: block; font-size: 13px; } .login-notice p { font-size: 11px; margin: 2px 0 0; } .login-notice button { background: transparent; border: 0; color: #fff; cursor: pointer; font-size: 19px; line-height: 1; margin-left: 4px; padding: 0; } @media (max-width: 600px) { .login-notice { bottom: 78px; left: 16px; right: 16px; } }
+.login-notice-backdrop { align-items: center; animation: fade-in .18s ease both; background: rgba(27, 28, 23, .18); display: flex; inset: 0; justify-content: center; pointer-events: none; position: fixed; z-index: 45; }
+.login-notice-card { align-items: center; animation: modal-in .28s ease both; background: var(--paper); box-shadow: 8px 8px 0 rgba(22, 130, 68, .35); color: var(--ink); display: flex; flex-direction: column; gap: 10px; min-width: min(310px, calc(100vw - 48px)); padding: 30px 28px; text-align: center; }
+.login-notice-card strong { display: block; font: 700 20px/1.1 var(--display); letter-spacing: -.01em; }
+.login-notice-card p { color: rgba(27, 28, 23, .66); font-size: 12px; line-height: 1.4; margin: 0; }
+.login-spinner { animation: login-spin .75s linear infinite; border: 3px solid rgba(27, 28, 23, .16); border-top-color: var(--coral); border-radius: 50%; display: block; height: 36px; width: 36px; }
+.login-success-icon { align-items: center; background: #168244; border-radius: 50%; color: #fff; display: inline-flex; font-size: 23px; font-weight: 800; height: 42px; justify-content: center; width: 42px; }
+.login-notice-card.ready { box-shadow: 8px 8px 0 rgba(239, 102, 77, .55); }
+@keyframes login-spin { to { transform: rotate(360deg); } }
