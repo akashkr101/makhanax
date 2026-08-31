@@ -9,22 +9,26 @@
       <button type="button" [class.active]="section() === 'reports'" (click)="selectSection('reports')">Reports</button>
     </nav>
     <div class="admin-menu">
-      <button class="admin-menu-trigger" type="button" aria-label="Open admin sections menu" [attr.aria-expanded]="adminMenuOpen()" aria-controls="admin-menu-panel" (click)="toggleAdminMenu()"><span class="admin-menu-icon" aria-hidden="true"><i></i><i></i><i></i></span><span class="admin-menu-current">{{ sectionLabel(section()) }}</span></button>
-      @if (adminMenuOpen()) {
-        <nav id="admin-menu-panel" class="admin-menu-panel" aria-label="Admin sections">
-          <button type="button" [class.active]="section() === 'overview'" (click)="selectSection('overview')">Dashboard</button>
-          <button type="button" [class.active]="section() === 'products'" (click)="selectSection('products')">Products</button>
-          <button type="button" [class.active]="section() === 'orders'" (click)="selectSection('orders')">Orders</button>
-          <button type="button" [class.active]="section() === 'customers'" (click)="selectSection('customers')">Customers</button>
-          <button type="button" [class.active]="section() === 'reports'" (click)="selectSection('reports')">Reports</button>
-        </nav>
-      }
+      <button class="admin-menu-trigger" type="button" aria-label="Open admin sections menu" [attr.aria-expanded]="adminMenuOpen()" aria-controls="admin-drawer-panel" (click)="toggleAdminMenu()"><span class="admin-menu-icon" aria-hidden="true"><i></i><i></i><i></i></span><span class="admin-menu-current">{{ sectionLabel(section()) }}</span></button>
     </div>
     <div class="admin-sidebar-footer">
       <button type="button" class="admin-link" (click)="backToStore()">← Back to store</button>
       <button type="button" class="admin-link" (click)="signOut()">Sign out</button>
     </div>
   </aside>
+
+  @if (adminMenuOpen()) { <div class="admin-drawer-backdrop" (click)="closeAdminMenu()"></div> }
+  <nav id="admin-drawer-panel" class="admin-drawer" [class.open]="adminMenuOpen()" aria-label="Admin sections">
+    <div class="admin-drawer-header">
+      <span class="admin-brand"><span class="brand-mark">✳</span> MakhanaX <em>Admin</em></span>
+      <button type="button" class="admin-drawer-close" aria-label="Close menu" (click)="closeAdminMenu()">×</button>
+    </div>
+    <button type="button" [class.active]="section() === 'overview'" (click)="selectSection('overview')">Dashboard</button>
+    <button type="button" [class.active]="section() === 'products'" (click)="selectSection('products')">Products</button>
+    <button type="button" [class.active]="section() === 'orders'" (click)="selectSection('orders')">Orders</button>
+    <button type="button" [class.active]="section() === 'customers'" (click)="selectSection('customers')">Customers</button>
+    <button type="button" [class.active]="section() === 'reports'" (click)="selectSection('reports')">Reports</button>
+  </nav>
 
   <main class="admin-main">
     @if (section() === 'overview') {
