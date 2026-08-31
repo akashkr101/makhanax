@@ -102,6 +102,10 @@
 .order-status-badge.shipped { background: #e0e7ff; color: #4338ca; }
 .order-status-badge.delivered { background: #dcfce7; color: #166534; }
 .order-status-badge.cancelled { background: #fee2e2; color: #b91c1c; }
+.order-history-status { background: rgba(27, 28, 23, .045); border-radius: 5px; display: grid; gap: 2px; margin-top: 8px; padding: 8px 9px; }
+.order-history-status span { color: var(--coral); font-size: 8px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.order-history-status strong { color: var(--ink); font-size: 13px; }
+.order-history-status small { color: rgba(27, 28, 23, .62); font-size: 10px; line-height: 1.35; }
 .order-history-items { list-style: none; margin: 8px 0 0; padding: 0; }
 .order-history-items li { align-items: center; border-top: 1px solid rgba(27, 28, 23, .08); display: grid; font-size: 11px; gap: 8px; grid-template-columns: minmax(0, 1fr) auto; padding: 6px 0; }
 .order-history-items li strong { display: block; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
