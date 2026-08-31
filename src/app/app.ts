@@ -1,5 +1,5 @@
 import { UpperCasePipe } from '@angular/common';
-import { Component, OnInit, computed, HostListener, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, effect, HostListener, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CartDrawerComponent } from './components/cart-drawer/cart-drawer.component';
 import { CheckoutComponent } from './components/checkout/checkout.component';
@@ -17,7 +17,7 @@ import { Product } from './models/product';
   templateUrl: './app.html',
   styleUrls: ['./app.scss', './app-overrides.scss'],
 })
-export class App implements OnInit {
+export class App implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly cartService = inject(CartService);
   private readonly customerDirectoryService = inject(CustomerDirectoryService);
@@ -58,10 +58,21 @@ export class App implements OnInit {
   protected readonly cartItemCount = this.cartService.itemCount;
   protected readonly totalCustomers = this.customerDirectoryService.totalCustomers;
   protected readonly headerHidden = signal(false);
+  private readonly overlayOpen = computed(() => this.cartOpen() || this.checkoutOpen() || this.loginOpen() || this.profileOpen());
   private lastScrollPosition = 0;
+  private pageScrollLocked = false;
+  private pageScrollPosition = 0;
+
+  constructor() {
+    effect(() => this.setPageScrollLocked(this.overlayOpen()));
+  }
 
   ngOnInit(): void {
     this.customerDirectoryService.watchTotalCustomers();
+  }
+
+  ngOnDestroy(): void {
+    this.setPageScrollLocked(false);
   }
 
   @HostListener('window:scroll')
@@ -238,6 +249,34 @@ export class App implements OnInit {
     this.cartService.clear();
     this.orderConfirmation.set(true);
     window.setTimeout(() => this.orderConfirmation.set(false), 5000);
+  }
+
+  private setPageScrollLocked(locked: boolean): void {
+    if (typeof document === 'undefined') return;
+    const body = document.body;
+
+    if (locked && !this.pageScrollLocked) {
+      this.pageScrollPosition = window.scrollY;
+      body.style.position = 'fixed';
+      body.style.top = `-${this.pageScrollPosition}px`;
+      body.style.left = '0';
+      body.style.right = '0';
+      body.style.width = '100%';
+      body.style.overflow = 'hidden';
+      this.pageScrollLocked = true;
+      return;
+    }
+
+    if (!locked && this.pageScrollLocked) {
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
+      body.style.overflow = '';
+      window.scrollTo(0, this.pageScrollPosition);
+      this.pageScrollLocked = false;
+    }
   }
 
 }
