@@ -53,6 +53,7 @@ export class App implements OnInit, OnDestroy {
   protected readonly pendingCheckout = signal(false);
   protected readonly cartNotice = signal('');
   protected readonly loginNotice = signal(false);
+  protected readonly loginNoticeLoading = signal(false);
   protected readonly orderConfirmation = signal(false);
   protected readonly cartItems = this.cartService.items;
   protected readonly cartItemCount = this.cartService.itemCount;
@@ -211,7 +212,9 @@ export class App implements OnInit, OnDestroy {
     this.pendingCheckout.set(false);
     this.authService.closeLogin();
     this.loginNotice.set(true);
-    window.setTimeout(() => this.loginNotice.set(false), 3500);
+    this.loginNoticeLoading.set(true);
+    window.setTimeout(() => this.loginNoticeLoading.set(false), 650);
+    window.setTimeout(() => this.loginNotice.set(false), 2800);
     if (shouldOpenCheckout) this.checkoutOpen.set(true);
   }
 
