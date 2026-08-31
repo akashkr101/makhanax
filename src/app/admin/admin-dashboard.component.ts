@@ -44,6 +44,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   protected readonly section = signal<AdminSection>('overview');
   protected readonly adminMenuOpen = signal(false);
+  private drawerTouchStartX = 0;
+  private drawerTouchStartY = 0;
   protected readonly customerName = this.authService.customerProfile;  protected readonly statuses: OrderStatus[] = ['New', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
   protected readonly statusFilters: OrderStatusFilter[] = ['All', ...this.statuses];
   protected readonly categories: MakhanaCategory[] = ['normal', 'ready-to-eat', 'salty', 'tikha'];
@@ -240,13 +242,22 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.adminMenuOpen.set(false);
   }
 
+  protected onDrawerTouchStart(event: TouchEvent): void {
+    const touch = event.touches[0];
+    this.drawerTouchStartX = touch.clientX;
+    this.drawerTouchStartY = touch.clientY;
+  }
+
+  protected onDrawerTouchEnd(event: TouchEvent): void {
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - this.drawerTouchStartX;
+    const deltaY = touch.clientY - this.drawerTouchStartY;
+    if (deltaX < -60 && Math.abs(deltaX) > Math.abs(deltaY)) this.closeAdminMenu();
+  }
+
   private setDrawerScrollLocked(locked: boolean): void {
     if (typeof document === 'undefined') return;
     document.body.style.overflow = locked ? 'hidden' : '';
-  }
-
-  protected sectionLabel(section: AdminSection): string {
-    return { overview: 'Dashboard', products: 'Products', orders: 'Orders', customers: 'Customers', reports: 'Reports' }[section];
   }
 
   protected async signOut(): Promise<void> {

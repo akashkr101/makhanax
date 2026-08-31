@@ -9,7 +9,7 @@
       <button type="button" [class.active]="section() === 'reports'" (click)="selectSection('reports')">Reports</button>
     </nav>
     <div class="admin-menu">
-      <button class="admin-menu-trigger" type="button" aria-label="Open admin sections menu" [attr.aria-expanded]="adminMenuOpen()" aria-controls="admin-drawer-panel" (click)="toggleAdminMenu()"><span class="admin-menu-icon" aria-hidden="true"><i></i><i></i><i></i></span><span class="admin-menu-current">{{ sectionLabel(section()) }}</span></button>
+      <button class="admin-menu-trigger" type="button" aria-label="Open admin sections menu" [attr.aria-expanded]="adminMenuOpen()" aria-controls="admin-drawer-panel" (click)="toggleAdminMenu()"><span class="admin-menu-icon" aria-hidden="true"><i></i><i></i><i></i></span></button>
     </div>
     <div class="admin-sidebar-footer">
       <button type="button" class="admin-link" (click)="backToStore()">← Back to store</button>
@@ -18,7 +18,7 @@
   </aside>
 
   @if (adminMenuOpen()) { <div class="admin-drawer-backdrop" (click)="closeAdminMenu()"></div> }
-  <nav id="admin-drawer-panel" class="admin-drawer" [class.open]="adminMenuOpen()" aria-label="Admin sections">
+  <nav id="admin-drawer-panel" class="admin-drawer" [class.open]="adminMenuOpen()" aria-label="Admin sections" (touchstart)="onDrawerTouchStart($event)" (touchend)="onDrawerTouchEnd($event)">
     <div class="admin-drawer-header">
       <span class="admin-brand"><span class="brand-mark">✳</span> MakhanaX <em>Admin</em></span>
       <button type="button" class="admin-drawer-close" aria-label="Close menu" (click)="closeAdminMenu()">×</button>
@@ -28,11 +28,13 @@
     <button type="button" [class.active]="section() === 'orders'" (click)="selectSection('orders')">Orders</button>
     <button type="button" [class.active]="section() === 'customers'" (click)="selectSection('customers')">Customers</button>
     <button type="button" [class.active]="section() === 'reports'" (click)="selectSection('reports')">Reports</button>
+    <button type="button" class="admin-drawer-link" (click)="backToStore()">← Back to store</button>
+    <div class="admin-drawer-spacer"></div>
+    <button type="button" class="admin-drawer-link admin-drawer-signout" (click)="signOut()">Sign out</button>
   </nav>
 
   <main class="admin-main">
     @if (section() === 'overview') {
-      <h1>Admin dashboard</h1>
       <div class="admin-stats">
         <div class="admin-stat"><span>Today's orders</span><strong>{{ formatPrice(todaysRevenue()) }}</strong></div>
         <div class="admin-stat"><span>Orders</span><strong>{{ todaysOrderCount() }}</strong></div>
