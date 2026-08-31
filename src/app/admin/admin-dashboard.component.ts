@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { UpperCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -33,7 +33,7 @@ const emptyProductForm = (): Omit<Product, 'id'> => ({
   templateUrl: './admin-dashboard.component.html',
   styleUrl: './admin-dashboard.component.scss'
 })
-export class AdminDashboardComponent implements OnInit {
+export class AdminDashboardComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   protected readonly productService = inject(ProductService);
@@ -44,8 +44,7 @@ export class AdminDashboardComponent implements OnInit {
 
   protected readonly section = signal<AdminSection>('overview');
   protected readonly adminMenuOpen = signal(false);
-  protected readonly customerName = this.authService.customerProfile;
-  protected readonly statuses: OrderStatus[] = ['New', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
+  protected readonly customerName = this.authService.customerProfile;  protected readonly statuses: OrderStatus[] = ['New', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
   protected readonly statusFilters: OrderStatusFilter[] = ['All', ...this.statuses];
   protected readonly categories: MakhanaCategory[] = ['normal', 'ready-to-eat', 'salty', 'tikha'];
   protected readonly orderStatusFilter = signal<OrderStatusFilter>('All');
@@ -168,12 +167,20 @@ export class AdminDashboardComponent implements OnInit {
     return topProducts.map(([name, units]) => ({ name, units, width: Math.round((units / maxUnits) * 100) }));
   });
 
+  constructor() {
+    effect(() => this.setDrawerScrollLocked(this.adminMenuOpen()));
+  }
+
   ngOnInit(): void {
     this.restoreSection();
     void this.loadProducts();
     void this.orderHistoryService.loadAll();
     void this.customerDirectoryService.loadAll();
     void this.loadAnalytics();
+  }
+
+  ngOnDestroy(): void {
+    this.setDrawerScrollLocked(false);
   }
 
   private async loadProducts(): Promise<void> {
@@ -227,6 +234,15 @@ export class AdminDashboardComponent implements OnInit {
 
   protected toggleAdminMenu(): void {
     this.adminMenuOpen.update((open) => !open);
+  }
+
+  protected closeAdminMenu(): void {
+    this.adminMenuOpen.set(false);
+  }
+
+  private setDrawerScrollLocked(locked: boolean): void {
+    if (typeof document === 'undefined') return;
+    document.body.style.overflow = locked ? 'hidden' : '';
   }
 
   protected sectionLabel(section: AdminSection): string {
