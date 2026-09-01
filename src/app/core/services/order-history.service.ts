@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { getApp, getApps, initializeApp } from 'firebase/app';
-import { addDoc, collection, doc, getDocs, getFirestore, query, updateDoc, where } from 'firebase/firestore';
+import { addDoc, collection, doc, getDocs, getFirestore, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
 import { environment } from '../../../environments/environment';
 
 export type OrderStatus = 'New' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Cancelled';
@@ -36,6 +36,7 @@ export class OrderHistoryService {
 
   private readonly firebaseApp = getApps().length ? getApp() : initializeApp(environment.firebase);
   private readonly firestore = getFirestore(this.firebaseApp);
+  private unsubscribeAllOrders?: () => void;
 
   async load(userId: string): Promise<void> {
     try {
@@ -52,16 +53,17 @@ export class OrderHistoryService {
   }
 
   async loadAll(): Promise<void> {
-    try {
-      const snapshot = await getDocs(collection(this.firestore, 'orders'));
+    if (this.unsubscribeAllOrders) return;
+
+    this.unsubscribeAllOrders = onSnapshot(collection(this.firestore, 'orders'), (snapshot) => {
       const orders = snapshot.docs.map((orderDoc) => ({ id: orderDoc.id, ...orderDoc.data() } as OrderRecord));
       orders.sort((a, b) => b.placedAt.localeCompare(a.placedAt));
       this.allOrders.set(orders);
       this.error.set('');
-    } catch (error: unknown) {
+    }, (error: unknown) => {
       this.error.set('Could not load orders. Check Firestore setup and rules.');
       console.error('Loading all orders failed:', error);
-    }
+    });
   }
 
   async updateStatus(orderId: string, status: OrderStatus): Promise<void> {
