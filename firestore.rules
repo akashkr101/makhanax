@@ -11,7 +11,9 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return signedIn() && request.auth.token.email == 'akrocks63@gmail.com';
+      return signedIn() &&
+        exists(/databases/$(database)/documents/customers/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/customers/$(request.auth.uid)).data.role == 'ADMIN';
     }
 
     function isOwner(userId) {
