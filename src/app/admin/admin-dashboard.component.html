@@ -142,6 +142,7 @@
 
     @if (section() === 'orders') {
       <h1>Orders</h1>
+      @if (orderHistoryService.error()) { <p class="admin-error">{{ orderHistoryService.error() }}</p> }
       @if (orderActionError()) { <p class="admin-error">{{ orderActionError() }}</p> }
       @if (orderActionNotice()) { <p class="admin-success">{{ orderActionNotice() }}</p> }
       <table class="admin-table">
