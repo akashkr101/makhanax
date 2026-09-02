@@ -37,19 +37,24 @@ export class OrderHistoryService {
   private readonly firebaseApp = getApps().length ? getApp() : initializeApp(environment.firebase);
   private readonly firestore = getFirestore(this.firebaseApp);
   private unsubscribeAllOrders?: () => void;
+  private unsubscribeUserOrders?: () => void;
+  private watchedUserId = '';
 
   async load(userId: string): Promise<void> {
-    try {
-      const snapshot = await getDocs(query(collection(this.firestore, 'orders'), where('userId', '==', userId)));
+    if (this.watchedUserId === userId && this.unsubscribeUserOrders) return;
+
+    this.unsubscribeUserOrders?.();
+    this.watchedUserId = userId;
+    this.unsubscribeUserOrders = onSnapshot(query(collection(this.firestore, 'orders'), where('userId', '==', userId)), (snapshot) => {
       const orders = snapshot.docs.map((orderDoc) => ({ id: orderDoc.id, ...orderDoc.data() } as OrderRecord));
       orders.sort((a, b) => b.placedAt.localeCompare(a.placedAt));
       this.orders.set(orders.length > 0 ? orders : this.readLocalOrders(userId));
       this.error.set('');
-    } catch (error: unknown) {
+    }, (error: unknown) => {
       this.orders.set(this.readLocalOrders(userId));
       this.error.set('Cloud sync is unavailable. Showing orders saved on this device.');
       console.error('Loading order history failed:', error);
-    }
+    });
   }
 
   async loadAll(): Promise<void> {
@@ -70,6 +75,7 @@ export class OrderHistoryService {
     const changes: Partial<OrderRecord> = { status };
     await updateDoc(doc(this.firestore, 'orders', orderId), changes);
     this.allOrders.update((orders) => orders.map((order) => order.id === orderId ? { ...order, ...changes } : order));
+    this.orders.update((orders) => orders.map((order) => order.id === orderId ? { ...order, ...changes } : order));
   }
 
   async markStockAdjusted(orderId: string): Promise<void> {
