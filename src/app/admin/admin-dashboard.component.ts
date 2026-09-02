@@ -336,11 +336,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         return;
       }
       await this.orderHistoryService.updateStatus(orderId, nextStatus);
-      await this.orderHistoryService.loadAll();
-      const savedOrder = this.orderHistoryService.allOrders().find((candidate) => candidate.id === orderId);
-      if (savedOrder?.status !== nextStatus) {
-        throw new Error(`Firestore still has this order as ${savedOrder?.status ?? 'unknown'}. Check Firestore rules for admin order updates.`);
-      }
+      const updatedOrder: OrderRecord = { ...order, status: nextStatus };
       let stockAdjusted = order.stockAdjusted;
       if (nextStatus === 'Confirmed' && !order.stockAdjusted) {
         try {
@@ -354,7 +350,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       }
       if (nextStatus === 'Confirmed' && !order.confirmationEmailSent) {
         try {
-          await this.orderEmailService.sendOrderConfirmation({ ...order, status: nextStatus, stockAdjusted });
+          const sent = await this.orderEmailService.sendOrderConfirmation({ ...updatedOrder, stockAdjusted });
+          if (!sent) throw new Error(this.orderEmailService.error() || 'Email provider rejected the confirmation.');
           await this.orderHistoryService.markConfirmationEmailSent(orderId);
           this.orderActionNotice.set(`Order confirmed and email has been sent to ${order.customerName || 'the customer'}.`);
         } catch (emailError: unknown) {
@@ -364,7 +361,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       } else if (nextStatus === 'Confirmed') {
         this.orderActionNotice.set(`Order confirmed. Confirmation email was already sent to ${order.customerName || 'the customer'}.`);
       } else {
-        this.orderActionNotice.set(`Order status updated to ${nextStatus}.`);
+        const sent = await this.orderEmailService.sendOrderStatusUpdate(updatedOrder);
+        if (!sent) throw new Error(this.orderEmailService.error() || 'Email provider rejected the status update.');
+        this.orderActionNotice.set(`Order status updated to ${nextStatus} and email has been sent to ${order.customerName || 'the customer'}.`);
       }
     } catch (error: unknown) {
       this.orderActionError.set(`Could not update this order. ${this.formatError(error)}`);
