@@ -2,7 +2,7 @@ name: Build CI
 
 on:
   push:
-    branches: [dev]
+    branches: [dev, test, prod]
   pull_request:
     branches: [dev]
   workflow_dispatch:
@@ -82,6 +82,21 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Set image metadata
+        id: image-metadata
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        shell: bash
+        run: |
+          BUILD_DATE="$(date -u +%Y%m%d-%H%M%S)"
+          IMMUTABLE_TAG="${GITHUB_REF_NAME}-build-${GITHUB_RUN_NUMBER}-${BUILD_DATE}"
+          {
+            echo 'dockerhub_tags<<EOF'
+            echo "$DOCKERHUB_USERNAME/makhanax:${GITHUB_REF_NAME}"
+            echo "$DOCKERHUB_USERNAME/makhanax:$IMMUTABLE_TAG"
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+
       - name: Build and push development image
         uses: docker/build-push-action@v6
         with:
@@ -92,8 +107,7 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:dev-latest
             ghcr.io/${{ github.repository }}:dev-${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/makhanax:dev-latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/makhanax:dev-${{ github.sha }}
+            ${{ steps.image-metadata.outputs.dockerhub_tags }}
 
   publish-test-image:
     if: github.event_name != 'pull_request' && github.ref_name == 'test'
@@ -120,6 +134,21 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Set image metadata
+        id: image-metadata
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        shell: bash
+        run: |
+          BUILD_DATE="$(date -u +%Y%m%d-%H%M%S)"
+          IMMUTABLE_TAG="${GITHUB_REF_NAME}-build-${GITHUB_RUN_NUMBER}-${BUILD_DATE}"
+          {
+            echo 'dockerhub_tags<<EOF'
+            echo "$DOCKERHUB_USERNAME/makhanax:${GITHUB_REF_NAME}"
+            echo "$DOCKERHUB_USERNAME/makhanax:$IMMUTABLE_TAG"
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+
       - name: Build and push test image
         uses: docker/build-push-action@v6
         with:
@@ -130,8 +159,7 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:test-latest
             ghcr.io/${{ github.repository }}:test-${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/makhanax:test-latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/makhanax:test-${{ github.sha }}
+            ${{ steps.image-metadata.outputs.dockerhub_tags }}
 
   publish-production-image:
     if: github.event_name != 'pull_request' && github.ref_name == 'prod'
@@ -158,6 +186,21 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Set image metadata
+        id: image-metadata
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        shell: bash
+        run: |
+          BUILD_DATE="$(date -u +%Y%m%d-%H%M%S)"
+          IMMUTABLE_TAG="${GITHUB_REF_NAME}-build-${GITHUB_RUN_NUMBER}-${BUILD_DATE}"
+          {
+            echo 'dockerhub_tags<<EOF'
+            echo "$DOCKERHUB_USERNAME/makhanax:${GITHUB_REF_NAME}"
+            echo "$DOCKERHUB_USERNAME/makhanax:$IMMUTABLE_TAG"
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+
       - name: Build and push production image
         uses: docker/build-push-action@v6
         with:
@@ -168,5 +211,4 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:prod-latest
             ghcr.io/${{ github.repository }}:prod-${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/makhanax:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/makhanax:prod-${{ github.sha }}
+            ${{ steps.image-metadata.outputs.dockerhub_tags }}

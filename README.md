@@ -47,13 +47,22 @@ docker run --rm -p 8080:8080 makhanax:local
 
 Open `http://localhost:8080` after the container starts.
 
-After a successful GitHub Actions build on `dev`, the same image is pushed
-automatically to Docker Hub. Configure the repository secrets
+After a successful GitHub Actions build on `dev`, `test`, or `prod`, the same
+image is pushed automatically to Docker Hub. Configure the repository secrets
 `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` first.
 
-Development images are published as
-`<dockerhub-username>/makhanax:dev-latest` and
-`<dockerhub-username>/makhanax:dev-<commit-sha>`.
+Each branch has a stable tag and an immutable build tag:
+
+```text
+<dockerhub-username>/makhanax:dev
+<dockerhub-username>/makhanax:dev-build-42-20260922-143015
+<dockerhub-username>/makhanax:test
+<dockerhub-username>/makhanax:test-build-43-20260922-143120
+<dockerhub-username>/makhanax:prod
+<dockerhub-username>/makhanax:prod-build-44-20260922-143225
+```
+
+The build number comes from GitHub Actions and the timestamp is UTC.
 
 ## Running unit tests
 
