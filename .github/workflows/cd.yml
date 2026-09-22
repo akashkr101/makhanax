@@ -23,6 +23,11 @@ jobs:
       name: development
       url: https://makhanax-dev.web.app
     steps:
+      - name: Check out triggering commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
       - name: Download validated web artifact
         uses: actions/download-artifact@v4
         with:
@@ -47,6 +52,11 @@ jobs:
       name: test
       url: https://makhanax-test.web.app
     steps:
+      - name: Check out triggering commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
       - name: Download validated web artifact
         uses: actions/download-artifact@v4
         with:
@@ -71,6 +81,11 @@ jobs:
       name: production
       url: https://makhanax-prod.web.app
     steps:
+      - name: Check out triggering commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
       - name: Download validated web artifact
         uses: actions/download-artifact@v4
         with:
