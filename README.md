@@ -47,17 +47,13 @@ docker run --rm -p 8080:8080 makhanax:local
 
 Open `http://localhost:8080` after the container starts.
 
-The GitHub Actions workflow publishes versioned images to Docker Hub when a tag
-such as `v1.0.0` is pushed. Configure the repository secrets
-`DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` first, then run:
+After a successful GitHub Actions build on `dev`, the same image is pushed
+automatically to Docker Hub. Configure the repository secrets
+`DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` first.
 
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-The resulting images are published as
-`<dockerhub-username>/makhanax:1.0.0` and `latest`.
+Development images are published as
+`<dockerhub-username>/makhanax:dev-latest` and
+`<dockerhub-username>/makhanax:dev-<commit-sha>`.
 
 ## Running unit tests
 
