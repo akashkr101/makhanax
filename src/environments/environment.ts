@@ -5,6 +5,7 @@ export const environment: AppConfig = {
   paymentProvider: 'mock',
   otpProvider: 'firebase',
   enableCashOnDelivery: true,
+  demoMode: true,
   adminEmails: ['akrocks63@gmail.com'],
   emailjs: {
     serviceId: 'service_eem8q09',

@@ -10,6 +10,7 @@ import { CartService } from './core/services/cart.service';
 import { CustomerDirectoryService } from './core/services/customer-directory.service';
 import { OrderHistoryService } from './core/services/order-history.service';
 import { Product } from './models/product';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -247,7 +248,8 @@ export class App implements OnInit, OnDestroy {
 
   protected beginCheckout(): void {
     this.cartOpen.set(false);
-    if (this.authService.isAuthenticated()) {
+    if (environment.demoMode || this.authService.isAuthenticated()) {
+      if (environment.demoMode) this.authService.ensureDemoSession();
       this.checkoutOpen.set(true);
       return;
     }

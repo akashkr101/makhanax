@@ -108,6 +108,24 @@ export class AuthService {
     }
   }
 
+  ensureDemoSession(): boolean {
+    if (!environment.demoMode) return false;
+    if (this.isAuthenticated()) return true;
+
+    this.isAuthenticated.set(true);
+    this.userId.set('demo-user');
+    this.customerProfile.set({
+      displayName: 'Demo Shopper',
+      email: 'demo@makhanax.local',
+      phoneNumber: '+91 99999 99999'
+    });
+    this.role.set('CUSTOMER');
+    this.step.set('verified');
+    this.loginOpen.set(false);
+    this.notificationService.setUserId('demo-user');
+    return true;
+  }
+
   openLogin(): void {
     this.loginOpen.set(true);
     this.resetFlow();

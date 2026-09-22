@@ -99,6 +99,12 @@ export class OrderHistoryService {
     const localOrder: OrderRecord = { ...payload, id: `order-${Date.now()}` };
     this.orders.update((orders) => [localOrder, ...orders].slice(0, 25));
     this.writeLocalOrders(userId, this.orders());
+
+    if (environment.demoMode) {
+      this.error.set('');
+      return;
+    }
+
     try {
       const created = await Promise.race([
         addDoc(collection(this.firestore, 'orders'), payload),

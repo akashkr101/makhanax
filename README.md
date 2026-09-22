@@ -36,6 +36,29 @@ ng build
 
 This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
 
+## Docker
+
+Build and run the production image locally:
+
+```bash
+docker build --build-arg BUILD_CONFIGURATION=production -t makhanax:local .
+docker run --rm -p 8080:8080 makhanax:local
+```
+
+Open `http://localhost:8080` after the container starts.
+
+The GitHub Actions workflow publishes versioned images to Docker Hub when a tag
+such as `v1.0.0` is pushed. Configure the repository secrets
+`DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` first, then run:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The resulting images are published as
+`<dockerhub-username>/makhanax:1.0.0` and `latest`.
+
 ## Running unit tests
 
 To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
