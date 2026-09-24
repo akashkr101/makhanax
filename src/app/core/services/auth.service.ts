@@ -4,6 +4,7 @@ import { Auth, ConfirmationResult, RecaptchaVerifier, createUserWithEmailAndPass
 import { doc, getDoc, getFirestore, increment, setDoc } from 'firebase/firestore';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from './notification.service';
+import { isAdminEmail, normalizeUserRole } from './rbac.service';
 
 export type AuthStep = 'phone' | 'verification' | 'email' | 'verified';
 export type EmailAuthMode = 'signIn' | 'register';
@@ -84,8 +85,8 @@ export class AuthService {
       const snapshot = await getDoc(customerDoc);
       const existingRole = snapshot.data()?.['role'] as UserRole | undefined;
       const normalizedEmail = email.trim().toLowerCase();
-      const configuredRole: UserRole = environment.adminEmails?.includes(normalizedEmail) ? 'ADMIN' : 'CUSTOMER';
-      const assignedRole = configuredRole === 'ADMIN' ? 'ADMIN' : existingRole ?? 'CUSTOMER';
+      const configuredRole: UserRole = isAdminEmail(normalizedEmail, environment.adminEmails) ? 'ADMIN' : 'CUSTOMER';
+      const assignedRole = normalizeUserRole(configuredRole === 'ADMIN' ? 'ADMIN' : existingRole ?? 'CUSTOMER');
       await setDoc(customerDoc, {
         displayName, email, phoneNumber,
         role: assignedRole,

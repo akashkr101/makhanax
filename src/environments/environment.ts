@@ -2,7 +2,12 @@ import { AppConfig } from '../app/core/config/app-config';
 
 export const environment: AppConfig = {
   apiBaseUrl: 'https://api.example.com',
-  paymentProvider: 'mock',
+  paymentProvider: 'razorpay',
+  razorpay: {
+    keyId: 'rzp_test_demo_key',
+    merchantId: 'MakhanaX Demo Merchant',
+    webhookSecret: 'demo-webhook-secret'
+  },
   otpProvider: 'firebase',
   enableCashOnDelivery: true,
   demoMode: true,

@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { PaymentGateway } from './payment-gateway';
 
 export interface PaymentDetails {
   method: 'upi' | 'card' | 'netbanking' | 'cod';
@@ -36,24 +37,42 @@ export class PaymentService {
     this.paymentSuccess.set('');
 
     try {
-      // Simulate payment processing delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Validate payment details
       if (!this.validatePaymentDetails(details)) {
         throw new Error('Invalid payment details');
       }
 
-      // Generate transaction ID
-      const transactionId = this.generateTransactionId();
+      const gatewayOrder = await PaymentGateway.createOrder({
+        amount,
+        currency: 'INR',
+        orderId,
+        customerName: details.cardholderName || 'MakhanaX Customer',
+        customerEmail: 'customer@makhanax.local',
+        notes: {
+          paymentMethod: details.method,
+          orderId
+        }
+      });
 
-      // Simulate payment gateway call (replace with actual gateway)
-      const isSuccessful = Math.random() > 0.05; // 95% success rate for demo
-
-      if (!isSuccessful) {
-        throw new Error('Payment declined by payment gateway. Please try again.');
+      if (!gatewayOrder.success) {
+        throw new Error(gatewayOrder.message);
       }
 
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const verified = PaymentGateway.verifyPayment({
+        orderId: gatewayOrder.orderId,
+        amount: gatewayOrder.amount,
+        currency: gatewayOrder.currency,
+        razorpay_order_id: gatewayOrder.paymentGatewayOrderId,
+        razorpay_payment_id: `${gatewayOrder.orderId}-payment`,
+        razorpay_signature: 'demo-signature'
+      });
+
+      if (!verified) {
+        throw new Error('Payment verification failed.');
+      }
+
+      const transactionId = this.generateTransactionId();
       const response: PaymentResponse = {
         success: true,
         transactionId,
