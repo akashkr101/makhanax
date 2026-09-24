@@ -4,7 +4,8 @@ on:
   push:
     branches: [dev, test, prod]
   pull_request:
-    branches: [dev]
+    branches: [dev, test, prod]
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 permissions:
@@ -13,13 +14,15 @@ permissions:
   security-events: write
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.base.ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
   build:
-    name: Build (${{ github.ref_name }})
+    name: Build (${{ github.event.pull_request.base.ref || github.ref_name }})
     runs-on: ubuntu-latest
+    env:
+      TARGET_BRANCH: ${{ github.event.pull_request.base.ref || github.ref_name }}
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -37,22 +40,22 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
 
       - name: Build development application
-        if: github.ref_name == 'dev' || github.event_name == 'pull_request'
+        if: env.TARGET_BRANCH == 'dev'
         run: npm run build:dev
 
       - name: Build test application
-        if: github.ref_name == 'test'
+        if: env.TARGET_BRANCH == 'test'
         run: npm run build:test
 
       - name: Build production application
-        if: github.ref_name == 'prod'
+        if: env.TARGET_BRANCH == 'prod'
         run: npm run build:production
 
       - name: Upload validated web artifact
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: web-${{ github.ref_name }}-${{ github.sha }}
+          name: web-${{ env.TARGET_BRANCH }}-${{ github.sha }}
           path: dist/makhana-x/browser
           if-no-files-found: error
           retention-days: 14

@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   deploy-development:
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'dev'
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'dev' && github.event.workflow_run.event != 'pull_request'
     name: Deploy development site
     runs-on: ubuntu-latest
     environment:
@@ -45,7 +45,7 @@ jobs:
           projectId: makhanax-dev
 
   deploy-test:
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'test'
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'test' && github.event.workflow_run.event != 'pull_request'
     name: Deploy test site
     runs-on: ubuntu-latest
     environment:
@@ -74,7 +74,7 @@ jobs:
           projectId: makhanax-test
 
   deploy-production:
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'prod'
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'prod' && github.event.workflow_run.event != 'pull_request'
     name: Deploy production site
     runs-on: ubuntu-latest
     environment:
