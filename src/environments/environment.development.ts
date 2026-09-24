@@ -10,7 +10,7 @@ export const environment: AppConfig = {
   },
   otpProvider: 'firebase',
   enableCashOnDelivery: true,
-  demoMode: true,
+  demoMode: false,
   adminEmails: ['akrocks63@gmail.com'],
   emailjs: {
     serviceId: 'service_eem8q09',
