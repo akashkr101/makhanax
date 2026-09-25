@@ -3,8 +3,14 @@ import { InjectionToken } from '@angular/core';
 export interface AppConfig {
   apiBaseUrl: string;
   paymentProvider: 'razorpay' | 'cashfree' | 'stripe' | 'mock';
+  razorpay?: {
+    keyId?: string;
+    merchantId?: string;
+    webhookSecret?: string;
+  };
   otpProvider: 'firebase' | 'twilio' | 'msg91' | 'mock';
   enableCashOnDelivery: boolean;
+  demoMode?: boolean;
   adminEmails?: string[];
   emailjs?: {
     serviceId: string;

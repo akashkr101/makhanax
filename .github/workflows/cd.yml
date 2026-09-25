@@ -2,7 +2,7 @@ name: CD
 
 on:
   workflow_run:
-    workflows: [CI]
+    workflows: [Build CI]
     types: [completed]
     branches: [dev, test, prod]
 
@@ -16,13 +16,18 @@ concurrency:
 
 jobs:
   deploy-development:
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'dev'
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'dev' && github.event.workflow_run.event != 'pull_request'
     name: Deploy development site
     runs-on: ubuntu-latest
     environment:
       name: development
       url: https://makhanax-dev.web.app
     steps:
+      - name: Check out triggering commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
       - name: Download validated web artifact
         uses: actions/download-artifact@v4
         with:
@@ -40,13 +45,18 @@ jobs:
           projectId: makhanax-dev
 
   deploy-test:
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'test'
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'test' && github.event.workflow_run.event != 'pull_request'
     name: Deploy test site
     runs-on: ubuntu-latest
     environment:
       name: test
       url: https://makhanax-test.web.app
     steps:
+      - name: Check out triggering commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
       - name: Download validated web artifact
         uses: actions/download-artifact@v4
         with:
@@ -64,13 +74,18 @@ jobs:
           projectId: makhanax-test
 
   deploy-production:
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'prod'
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'prod' && github.event.workflow_run.event != 'pull_request'
     name: Deploy production site
     runs-on: ubuntu-latest
     environment:
       name: production
       url: https://makhanax-prod.web.app
     steps:
+      - name: Check out triggering commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
       - name: Download validated web artifact
         uses: actions/download-artifact@v4
         with:

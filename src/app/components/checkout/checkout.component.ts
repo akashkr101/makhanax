@@ -6,6 +6,8 @@ import { OrderHistoryService } from '../../core/services/order-history.service';
 import { PaymentService, PaymentDetails } from '../../core/services/payment.service';
 import { OrderEmailService } from '../../core/services/order-email.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { ProductService } from '../../core/services/product.service';
+import { validateOrderItems } from '../../core/services/order-validation';
 import { CartItem } from '../../models/product';
 
 @Component({
@@ -22,6 +24,7 @@ export class CheckoutComponent {
   private readonly paymentService = inject(PaymentService);
   private readonly orderEmailService = inject(OrderEmailService);
   private readonly notificationService = inject(NotificationService);
+  private readonly productService = inject(ProductService);
   private loadedAddressUserId = '';
   private hasAppliedSavedAddress = false;
   readonly items = input<CartItem[]>([]);
@@ -68,7 +71,22 @@ export class CheckoutComponent {
   }
 
   protected total(): number {
-    return this.items().reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    const validation = validateOrderItems(
+      this.items().map((item) => ({
+        productId: item.product.id,
+        name: item.product.name,
+        size: item.product.size,
+        quantity: item.quantity
+      })),
+      this.productService.products().map((product) => ({
+        id: product.id,
+        name: product.name,
+        size: product.size,
+        stock: product.stock ?? 0,
+        price: product.price
+      }))
+    );
+    return validation.valid ? validation.subtotal : this.items().reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   }
 
   protected formatPrice(price: number): string {
@@ -127,6 +145,28 @@ export class CheckoutComponent {
         address: this.deliveryAddress
       });
 
+      const orderItems = this.items().map((item) => ({
+        productId: item.product.id,
+        name: item.product.name,
+        size: item.product.size,
+        quantity: item.quantity
+      }));
+
+      const validation = validateOrderItems(
+        orderItems,
+        this.productService.products().map((product) => ({
+          id: product.id,
+          name: product.name,
+          size: product.size,
+          stock: product.stock ?? 0,
+          price: product.price
+        }))
+      );
+
+      if (!validation.valid) {
+        throw new Error(validation.messages.join(' '));
+      }
+
       // Process payment
       const paymentDetails: PaymentDetails = {
         method: this.paymentMethod,
@@ -140,7 +180,7 @@ export class CheckoutComponent {
       };
 
       const paymentResponse = await this.paymentService.processPayment(
-        this.total(),
+        validation.subtotal,
         paymentDetails,
         `order-${Date.now()}`
       );
@@ -154,14 +194,14 @@ export class CheckoutComponent {
 
       // Record order after successful payment
       await this.orderHistoryService.record(userId, this.fullName || 'Customer', this.emailAddress.trim().toLowerCase(), {
-        total: this.total(),
+        total: validation.subtotal,
         paymentMethod: this.paymentMethod,
-        items: this.items().map((item) => ({
-          productId: item.product.id,
-          name: item.product.name,
-          size: item.product.size,
+        items: validation.itemTotals.map((item) => ({
+          productId: item.productId,
+          name: item.name,
+          size: item.size,
           quantity: item.quantity,
-          price: item.product.price
+          price: item.unitPrice
         }))
       });
 

@@ -8,6 +8,7 @@ import { OrderEmailService } from '../core/services/order-email.service';
 import { OrderHistoryService, OrderRecord, OrderStatus } from '../core/services/order-history.service';
 import { ProductService } from '../core/services/product.service';
 import { AnalyticsService, CustomerSatisfaction, EngagementMetrics } from '../core/services/analytics.service';
+import { canAdvanceOrderStatus } from '../core/services/order-lifecycle';
 import { MakhanaCategory, Product } from '../models/product';
 
 type AdminSection = 'overview' | 'products' | 'orders' | 'customers' | 'reports';
@@ -314,10 +315,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   protected canMoveOrderTo(currentStatus: OrderStatus, nextStatus: OrderStatus): boolean {
-    if (currentStatus === nextStatus) return true;
-    if (currentStatus === 'Delivered' || currentStatus === 'Cancelled') return false;
-    if (nextStatus === 'Cancelled') return true;
-    return orderStatusRank[nextStatus] > orderStatusRank[currentStatus] && nextStatus !== 'New';
+    return canAdvanceOrderStatus(currentStatus, nextStatus);
   }
 
   protected async changeOrderStatus(orderId: string, status: string): Promise<void> {
