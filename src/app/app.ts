@@ -10,6 +10,7 @@ import { CartService } from './core/services/cart.service';
 import { CustomerDirectoryService } from './core/services/customer-directory.service';
 import { OrderHistoryService } from './core/services/order-history.service';
 import { Product } from './models/product';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -27,20 +28,13 @@ export class App implements OnInit, OnDestroy {
   protected readonly loginOpen = this.authService.loginOpen;
   protected readonly phoneNumber = this.authService.phoneNumber;
   protected readonly localPhoneNumber = signal('');
-  protected readonly countryCode = signal('+91');
-  protected readonly countryCodes = [
-    { code: '+91', name: 'India' },
-    { code: '+1', name: 'United States' },
-    { code: '+44', name: 'United Kingdom' },
-    { code: '+61', name: 'Australia' },
-    { code: '+971', name: 'UAE' }
-  ];
   protected readonly otpSent = computed(() => this.authService.step() === 'verification');
   protected readonly emailAuthOpen = computed(() => this.authService.step() === 'email');
   protected readonly authError = this.authService.error;
   protected readonly authSuccess = this.authService.success;
   protected readonly authLoading = this.authService.loading;
   protected readonly emailAuthMode = this.authService.emailMode;
+  protected readonly showPassword = signal(false);
   protected readonly isAuthenticated = this.authService.isAuthenticated;
   protected readonly customerProfile = this.authService.customerProfile;
   protected readonly cartOpen = signal(false);
@@ -100,6 +94,15 @@ export class App implements OnInit, OnDestroy {
 
   protected closeLogin(): void {
     this.authService.closeLogin();
+    this.showPassword.set(false);
+  }
+
+  protected closeLoginFromBackdrop(event: MouseEvent): void {
+    if (event.target === event.currentTarget) this.closeLogin();
+  }
+
+  protected togglePasswordVisibility(): void {
+    this.showPassword.update((visible) => !visible);
   }
 
   protected openProfile(): void {
@@ -173,7 +176,7 @@ export class App implements OnInit, OnDestroy {
 
   protected async requestOtp(event: Event): Promise<void> {
     event.preventDefault();
-    await this.authService.requestOtp(this.countryCode(), this.localPhoneNumber());
+    await this.authService.requestOtp(this.localPhoneNumber());
   }
 
   protected async verifyOtp(event: Event): Promise<void> {
@@ -205,6 +208,12 @@ export class App implements OnInit, OnDestroy {
       credentials.get('password')?.toString() ?? ''
     );
     if (authenticated) this.completeLogin();
+  }
+
+  protected async requestPasswordReset(event: Event): Promise<void> {
+    const form = (event.currentTarget as HTMLElement).closest('form');
+    const email = form ? new FormData(form).get('email')?.toString() ?? '' : '';
+    await this.authService.requestPasswordReset(email);
   }
 
   private completeLogin(): void {
@@ -239,7 +248,8 @@ export class App implements OnInit, OnDestroy {
 
   protected beginCheckout(): void {
     this.cartOpen.set(false);
-    if (this.authService.isAuthenticated()) {
+    if (environment.demoMode || this.authService.isAuthenticated()) {
+      if (environment.demoMode) this.authService.ensureDemoSession();
       this.checkoutOpen.set(true);
       return;
     }

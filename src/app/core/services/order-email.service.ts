@@ -92,6 +92,11 @@ export class OrderEmailService {
   private async sendEmail(email: string, name: string, templateType: string, variables: Record<string, string | number>): Promise<boolean> {
     const emailConfig = this.config.emailjs;
 
+    if (this.config?.demoMode) {
+      console.log(`📧 Demo mode: skipped email send to ${email} (${templateType})`);
+      return true;
+    }
+
     if (!emailConfig || emailConfig.serviceId.startsWith('YOUR_')) {
       const msg = 'EmailJS is not configured. Add serviceId, templateId, and publicKey in environment.ts.';
       this.emailError.set(msg);

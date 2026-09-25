@@ -41,6 +41,16 @@ export class AddressBookService {
       phone: address.phone.trim(),
       address: address.address.trim()
     };
+
+    const fallbackAddresses = { ...this.readLocalAddresses(userId), [category]: normalizedAddress };
+    this.writeLocalAddresses(userId, fallbackAddresses);
+    this.addresses.set(fallbackAddresses);
+
+    if (environment.demoMode) {
+      this.error.set('');
+      return 'local';
+    }
+
     try {
       await Promise.race([
         setDoc(doc(this.firestore, 'customers', userId), {
@@ -55,8 +65,6 @@ export class AddressBookService {
       this.writeLocalAddresses(userId, { ...this.addresses(), [category]: normalizedAddress });
       return 'cloud';
     } catch (error: unknown) {
-      const fallbackAddresses = { ...this.readLocalAddresses(userId), [category]: normalizedAddress };
-      this.writeLocalAddresses(userId, fallbackAddresses);
       this.addresses.set(fallbackAddresses);
       this.error.set('Cloud sync is unavailable. Address saved on this device for now.');
       console.error('Saving address to cloud failed, saved locally instead:', error);
