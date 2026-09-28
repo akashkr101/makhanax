@@ -1,0 +1,29 @@
+name: SonarQube
+
+on:
+  workflow_run:
+    workflows: [Build CI]
+    types: [completed]
+    branches: [dev, test, prod]
+
+permissions:
+  contents: read
+
+jobs:
+  sonarqube:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request'
+    name: SonarQube analysis
+    runs-on: [self-hosted, xda]
+    steps:
+      - name: Check out the CI commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: SonarQube scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: -Dsonar.qualitygate.wait=true
