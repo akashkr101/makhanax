@@ -16,7 +16,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request')
     name: SonarQube analysis
-    runs-on: [self-hosted, xda]
+    runs-on: [self-hosted, Windows, X64]
     steps:
       - name: Check out source commit
         uses: actions/checkout@v4
