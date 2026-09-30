@@ -24,7 +24,7 @@ jobs:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Add Git Bash to PATH
-        shell: powershell
+        shell: powershell -ExecutionPolicy Bypass -File {0}
         run: |
           $gitBashPath = 'C:\Program Files\Git\bin'
           if (-not (Test-Path (Join-Path $gitBashPath 'bash.exe'))) {
