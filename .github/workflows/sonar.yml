@@ -5,20 +5,23 @@ on:
     workflows: [Build CI]
     types: [completed]
     branches: [dev, test, prod]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   sonarqube:
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request'
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request')
     name: SonarQube analysis
     runs-on: [self-hosted, xda]
     steps:
-      - name: Check out the CI commit
+      - name: Check out source commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: SonarQube scan
         uses: SonarSource/sonarqube-scan-action@v5
