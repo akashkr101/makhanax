@@ -1,0 +1,41 @@
+name: SonarQube
+
+on:
+  workflow_run:
+    workflows: [Build CI]
+    types: [completed]
+    branches: [dev, test, prod]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sonarqube:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request')
+    name: SonarQube analysis
+    runs-on: [self-hosted, Windows, X64]
+    steps:
+      - name: Check out source commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Add Git Bash to PATH
+        shell: powershell -ExecutionPolicy Bypass -File {0}
+        run: |
+          $gitBashPath = 'C:\Program Files\Git\bin'
+          if (-not (Test-Path (Join-Path $gitBashPath 'bash.exe'))) {
+            throw "Git Bash was not found at $gitBashPath. Install Git for Windows on the runner."
+          }
+          [System.IO.File]::AppendAllText($env:GITHUB_PATH, "$gitBashPath`n")
+
+      - name: SonarQube scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: -Dsonar.qualitygate.wait=true
