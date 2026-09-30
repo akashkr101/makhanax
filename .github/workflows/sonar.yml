@@ -23,6 +23,15 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
+      - name: Add Git Bash to PATH
+        shell: pwsh
+        run: |
+          $gitBashPath = 'C:\Program Files\Git\bin'
+          if (-not (Test-Path (Join-Path $gitBashPath 'bash.exe'))) {
+            throw "Git Bash was not found at $gitBashPath. Install Git for Windows on the runner."
+          }
+          [System.IO.File]::AppendAllText($env:GITHUB_PATH, "$gitBashPath`n")
+
       - name: SonarQube scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
