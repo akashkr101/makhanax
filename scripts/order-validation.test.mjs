@@ -11,11 +11,11 @@ if (!existsSync(targetFile)) {
 }
 
 execSync(
-  'npx tsc --ignoreConfig --target ES2022 --module ES2022 --moduleResolution bundler --outDir .tmp-order-validation src/app/core/services/order-validation.ts',
+  'npx tsc --ignoreConfig --target ES2022 --module ES2022 --moduleResolution bundler --sourceMap --inlineSources --outDir .tmp-coverage/order-validation src/app/core/services/order-validation.ts',
   { stdio: 'inherit' }
 );
 
-const { validateOrderItems } = await import(new URL('../.tmp-order-validation/order-validation.js', import.meta.url).href);
+const { validateOrderItems } = await import(new URL('../.tmp-coverage/order-validation/order-validation.js', import.meta.url).href);
 
 const catalog = [
   { id: 'p1', name: 'Roasted Makhana', size: '250g', price: 200, stock: 10 },

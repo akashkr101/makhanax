@@ -1,11 +1,11 @@
 import { execSync } from 'node:child_process';
 
 execSync(
-  'npx tsc --ignoreConfig --target ES2022 --module ES2022 --moduleResolution bundler --outDir .tmp-order-lifecycle src/app/core/services/order-lifecycle.ts',
+  'npx tsc --ignoreConfig --target ES2022 --module ES2022 --moduleResolution bundler --sourceMap --inlineSources --outDir .tmp-coverage/order-lifecycle src/app/core/services/order-lifecycle.ts',
   { stdio: 'inherit' }
 );
 
-const { canAdvanceOrderStatus, ORDER_STATUS_SEQUENCE } = await import(new URL('../.tmp-order-lifecycle/order-lifecycle.js', import.meta.url).href);
+const { canAdvanceOrderStatus, ORDER_STATUS_SEQUENCE } = await import(new URL('../.tmp-coverage/order-lifecycle/order-lifecycle.js', import.meta.url).href);
 
 if (!ORDER_STATUS_SEQUENCE.includes('Confirmed') || !ORDER_STATUS_SEQUENCE.includes('Shipped') || !ORDER_STATUS_SEQUENCE.includes('Delivered')) {
   throw new Error('Order lifecycle sequence is incomplete');
