@@ -12,92 +12,81 @@ permissions:
 
 concurrency:
   group: cd-${{ github.event.workflow_run.head_branch }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  deploy-development:
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'dev' && github.event.workflow_run.event != 'pull_request'
-    name: Deploy development site
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request'
+    name: Deploy ${{ github.event.workflow_run.head_branch }}
     runs-on: ubuntu-latest
     environment:
-      name: development
-      url: https://makhanax-dev.web.app
+      name: ${{ github.event.workflow_run.head_branch == 'dev' && 'development' || github.event.workflow_run.head_branch == 'test' && 'test' || 'production' }}
+      url: https://makhanax-${{ github.event.workflow_run.head_branch }}.web.app
+    env:
+      FIREBASE_PROJECT_ID: makhanax-${{ github.event.workflow_run.head_branch }}
+      FUNCTIONS_DISCOVERY_TIMEOUT: 60
     steps:
+      - name: Reject superseded commits
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          CURRENT_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/$TARGET_BRANCH" --jq '.commit.sha')"
+          if [ "$CURRENT_SHA" != "$EXPECTED_SHA" ]; then
+            echo 'A newer commit exists; refusing to deploy an older build.'
+            exit 1
+          fi
+
       - name: Check out triggering commit
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
-      - name: Download validated web artifact
-        uses: actions/download-artifact@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          name: web-dev-${{ github.event.workflow_run.head_sha }}
-          path: dist/makhana-x/browser
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Deploy Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DEVELOPMENT }}
-          channelId: live
-          projectId: makhanax-dev
-
-  deploy-test:
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'test' && github.event.workflow_run.event != 'pull_request'
-    name: Deploy test site
-    runs-on: ubuntu-latest
-    environment:
-      name: test
-      url: https://makhanax-test.web.app
-    steps:
-      - name: Check out triggering commit
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          node-version: 22
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
 
       - name: Download validated web artifact
         uses: actions/download-artifact@v4
         with:
-          name: web-test-${{ github.event.workflow_run.head_sha }}
+          name: web-${{ github.event.workflow_run.head_branch }}-${{ github.event.workflow_run.head_sha }}
           path: dist/makhana-x/browser
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Authenticate Firebase deployment
+        uses: google-github-actions/auth@v2
         with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TEST }}
-          channelId: live
-          projectId: makhanax-test
+          credentials_json: ${{ secrets[github.event.workflow_run.head_branch == 'dev' && 'FIREBASE_SERVICE_ACCOUNT_DEVELOPMENT' || github.event.workflow_run.head_branch == 'test' && 'FIREBASE_SERVICE_ACCOUNT_TEST' || 'FIREBASE_SERVICE_ACCOUNT_PRODUCTION'] }}
 
-  deploy-production:
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'prod' && github.event.workflow_run.event != 'pull_request'
-    name: Deploy production site
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://makhanax-prod.web.app
-    steps:
-      - name: Check out triggering commit
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Install and build Cloud Functions
+        run: |
+          npm ci --prefix functions
+          npm run build --prefix functions
 
-      - name: Download validated web artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: web-prod-${{ github.event.workflow_run.head_sha }}
-          path: dist/makhana-x/browser
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Configure email parameters
+        env:
+          SMTP_HOST: ${{ vars.SMTP_HOST }}
+          SMTP_PORT: ${{ vars.SMTP_PORT || '587' }}
+          SMTP_USER: ${{ vars.SMTP_USER }}
+          SMTP_FROM: ${{ vars.SMTP_FROM }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { writeFileSync } from 'node:fs';
+          const fields = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_FROM'];
+          for (const field of fields) {
+            if (!process.env[field]) throw new Error(`Missing environment variable: ${field}`);
+          }
+          const contents = fields.map(field => `${field}=${JSON.stringify(process.env[field])}`).join('\n');
+          writeFileSync(`functions/.env.${process.env.FIREBASE_PROJECT_ID}`, contents);
+          NODE
 
-      - name: Deploy Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PRODUCTION }}
-          channelId: live
-          projectId: makhanax-prod
+      - name: Deploy backend and security rules
+        run: npx --yes firebase-tools@15.33.0 deploy --only functions,firestore:rules --project "$FIREBASE_PROJECT_ID" --non-interactive
+
+      - name: Deploy validated frontend
+        run: npx --yes firebase-tools@15.33.0 deploy --only hosting --project "$FIREBASE_PROJECT_ID" --non-interactive

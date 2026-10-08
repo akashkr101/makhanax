@@ -5,6 +5,8 @@
     "outDir": "lib",
     "rootDir": "src",
     "target": "ES2022",
+    "sourceMap": true,
+    "inlineSources": true,
     "lib": ["ES2022"],
     "strict": true,
     "esModuleInterop": true,

@@ -1,27 +1,32 @@
 name: SonarQube
 
 on:
-  workflow_run:
-    workflows: [Build CI]
-    types: [completed]
-    branches: [dev, test, prod]
+  workflow_call:
+    inputs:
+      coverage-artifact:
+        type: string
+        required: false
+        default: ''
+    secrets:
+      SONAR_TOKEN:
+        required: true
+      SONAR_HOST_URL:
+        required: true
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   sonarqube:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request')
     name: SonarQube analysis
     runs-on: [self-hosted, Windows, X64]
     steps:
       - name: Check out source commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
 
       - name: Add Git Bash to PATH
         shell: powershell -ExecutionPolicy Bypass -File {0}
@@ -42,14 +47,73 @@ jobs:
         shell: powershell -ExecutionPolicy Bypass -File {0}
         run: npm ci
 
-      - name: Run tests with coverage
+      - name: Download combined test coverage
+        if: inputs.coverage-artifact != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.coverage-artifact }}
+          path: coverage
+
+      - name: Install backend dependencies for standalone analysis
+        if: inputs.coverage-artifact == ''
         shell: powershell -ExecutionPolicy Bypass -File {0}
-        run: npm run test:coverage
+        run: npm ci --prefix functions
+
+      - name: Set up Java for standalone security tests
+        if: inputs.coverage-artifact == ''
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Run standalone tests with coverage
+        if: inputs.coverage-artifact == ''
+        shell: powershell -ExecutionPolicy Bypass -File {0}
+        env:
+          FUNCTIONS_DISCOVERY_TIMEOUT: 60
+        run: |
+          npm run test:coverage
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run test:security
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: SonarQube scan
-        uses: SonarSource/sonarqube-scan-action@v5
+        shell: powershell -ExecutionPolicy Bypass -File {0}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-          args: -Dsonar.qualitygate.wait=true
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $scannerVersion = '7.2.0.5079'
+          $archiveName = "sonar-scanner-cli-$scannerVersion-windows-x64.zip"
+          $archivePath = Join-Path $env:RUNNER_TEMP $archiveName
+          $extractPath = Join-Path $env:RUNNER_TEMP "sonar-scanner-$scannerVersion"
+          $downloadUrl = "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/$archiveName"
+          Invoke-WebRequest -Uri $downloadUrl -OutFile $archivePath -UseBasicParsing
+          Expand-Archive -LiteralPath $archivePath -DestinationPath $extractPath -Force
+          $scannerPath = Join-Path $extractPath "sonar-scanner-$scannerVersion-windows-x64\bin\sonar-scanner.bat"
+          if (-not (Test-Path $scannerPath)) {
+            throw 'SonarScanner executable was not found after extraction.'
+          }
+          & $scannerPath '-Dsonar.qualitygate.wait=true'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Report failed quality gate conditions
+        if: failure()
+        shell: powershell -ExecutionPolicy Bypass -File {0}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $baseUrl = $env:SONAR_HOST_URL.TrimEnd('/')
+          $headers = @{ Authorization = "Bearer $env:SONAR_TOKEN" }
+          $result = Invoke-RestMethod -Uri "$baseUrl/api/qualitygates/project_status?projectKey=makhanax" -Headers $headers -TimeoutSec 30
+          Write-Output "Quality gate status: $($result.projectStatus.status)"
+          $result.projectStatus.conditions |
+            Select-Object status, metricKey, comparator, errorThreshold, actualValue |
+            ConvertTo-Json -Depth 5
+          $issues = Invoke-RestMethod -Uri "$baseUrl/api/issues/search?componentKeys=makhanax&resolved=false&inNewCodePeriod=true&ps=100" -Headers $headers -TimeoutSec 30
+          $issues.issues |
+            Select-Object component, line, rule, severity, type, message |
+            ConvertTo-Json -Depth 5
