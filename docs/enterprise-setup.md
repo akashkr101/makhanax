@@ -34,6 +34,12 @@ workflow and wait for its quality gate before publishing images. Pull requests d
 execute code on the self-hosted runner. CD runs only after the entire Build CI succeeds.
 It deploys Functions and Firestore rules before publishing the validated Hosting artifact.
 
+The utility and emulator suites merge their coverage into one LCOV report. CI uploads
+that report for Sonar rather than regenerating utility-only coverage on the scanner runner.
+Standalone Sonar runs execute both suites. Backend source maps attribute callable coverage
+to TypeScript, and tests also invoke the exported handler against the demo database because
+Windows emulator worker shutdown can lose process-local coverage.
+
 The existing self-hosted Windows runner must be online and have Git Bash. Configure
 `SONAR_HOST_URL`, `SONAR_TOKEN`, `DOCKERHUB_USERNAME`, and `DOCKERHUB_TOKEN` as repository
 secrets. Promote these workflow files, dependency manifests, lockfiles, and application

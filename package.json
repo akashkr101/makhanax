@@ -13,7 +13,7 @@
     "test": "node scripts/order-validation.test.mjs && node scripts/order-lifecycle.test.mjs && node scripts/demo-mode.test.mjs",
     "test:build": "node scripts/build-artifact.test.mjs",
     "test:coverage": "c8 --reporter=lcov --reporter=text --reports-dir=coverage npm test",
-    "test:security": "npm run build --prefix functions && npx --yes firebase-tools@15.33.0 emulators:exec --only auth,firestore,functions --project demo-makhanax \"node --import tsx scripts/backend-security.test.mjs\""
+    "test:security": "npm run build --prefix functions && c8 --clean=false --reporter=lcov --reporter=text --reports-dir=coverage npx --yes firebase-tools@15.33.0 emulators:exec --only auth,firestore,functions --project demo-makhanax \"node --import tsx scripts/backend-security.test.mjs\""
   },
   "private": true,
   "packageManager": "npm@11.14.1",

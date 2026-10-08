@@ -70,7 +70,10 @@ for (const quantity of [0, -1, 1.5, NaN, Infinity, 1001]) {
 }
 assert.throws(() => validateCheckoutRequest({ ...checkout, items: [] }));
 assert.throws(() => validateCheckoutRequest({ ...checkout, items: Array(51).fill({ productId: 'p1', quantity: 1 }) }));
-assert.throws(() => validateCheckoutRequest({ ...checkout, customerEmail: 'invalid' }));
+for (const customerEmail of ['invalid', 'a@b', 'a@.b', 'a@b.', 'a@b..c', 'a@b@c.com', 'a b@example.com']) {
+  assert.throws(() => validateCheckoutRequest({ ...checkout, customerEmail }));
+}
+assert.equal(validateCheckoutRequest({ ...checkout, customerEmail: 'Customer@shop.example.com' }).customerEmail, 'customer@shop.example.com');
 assert.throws(() => validateCheckoutRequest({ ...checkout, deliveryAddress: '' }));
 assert.throws(() => priceCheckout({ ...checkout, expectedTotal: 1 }, catalog));
 assert.throws(() => priceCheckout(checkout, []));

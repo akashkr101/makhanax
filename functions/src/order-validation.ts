@@ -31,7 +31,12 @@ export function validateCheckoutRequest(data: unknown): CheckoutRequest {
   if (!/^[a-zA-Z0-9-]+$/.test(requestId)) throw new Error('Invalid request ID.');
   const customerName = text('customerName', 120);
   const customerEmail = text('customerEmail', 320).toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) throw new Error('Invalid email.');
+  const emailParts = customerEmail.split('@');
+  const domainParts = (emailParts[1] ?? '').split('.');
+  if (emailParts.length !== 2 || !emailParts[0] || domainParts.length < 2 ||
+      domainParts.some((part) => !part) || /\s/.test(customerEmail)) {
+    throw new Error('Invalid email.');
+  }
   const phoneNumber = text('phoneNumber', 30);
   const deliveryAddress = text('deliveryAddress', 1000);
   if (input['paymentMethod'] !== 'cod') throw new Error('Only cash on delivery is available.');

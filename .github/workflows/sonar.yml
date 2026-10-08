@@ -2,6 +2,11 @@ name: SonarQube
 
 on:
   workflow_call:
+    inputs:
+      coverage-artifact:
+        type: string
+        required: false
+        default: ''
     secrets:
       SONAR_TOKEN:
         required: true
@@ -11,6 +16,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   sonarqube:
@@ -41,9 +47,35 @@ jobs:
         shell: powershell -ExecutionPolicy Bypass -File {0}
         run: npm ci
 
-      - name: Run tests with coverage
+      - name: Download combined test coverage
+        if: inputs.coverage-artifact != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.coverage-artifact }}
+          path: coverage
+
+      - name: Install backend dependencies for standalone analysis
+        if: inputs.coverage-artifact == ''
         shell: powershell -ExecutionPolicy Bypass -File {0}
-        run: npm run test:coverage
+        run: npm ci --prefix functions
+
+      - name: Set up Java for standalone security tests
+        if: inputs.coverage-artifact == ''
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Run standalone tests with coverage
+        if: inputs.coverage-artifact == ''
+        shell: powershell -ExecutionPolicy Bypass -File {0}
+        env:
+          FUNCTIONS_DISCOVERY_TIMEOUT: 60
+        run: |
+          npm run test:coverage
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run test:security
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: SonarQube scan
         shell: powershell -ExecutionPolicy Bypass -File {0}
