@@ -3,9 +3,53 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { defineSecret, defineString } from 'firebase-functions/params';
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
+import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import nodemailer from 'nodemailer';
+import { CatalogProduct, priceCheckout, validateCheckoutRequest } from './order-validation.js';
 
 initializeApp();
+
+export const createOrder = onCall({ region: 'asia-south1', maxInstances: 10 }, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Sign in before placing an order.');
+  let checkout;
+  try {
+    checkout = validateCheckoutRequest(request.data);
+  } catch (error) {
+    throw new HttpsError('invalid-argument', error instanceof Error ? error.message : 'Invalid order.');
+  }
+  const userId = request.auth.uid;
+  const firestore = getFirestore();
+  const orderRef = firestore.doc(`orders/${userId}-${checkout.requestId}`);
+  return firestore.runTransaction(async (transaction) => {
+    const existing = await transaction.get(orderRef);
+    if (existing.exists) return { ...existing.data(), id: existing.id };
+    const productIds = [...new Set(checkout.items.map((item) => item.productId))];
+    const snapshots = await transaction.getAll(...productIds.map((id) => firestore.doc(`products/${id}`)));
+    const catalog = snapshots.filter((snapshot) => snapshot.exists)
+      .map((snapshot) => ({ ...snapshot.data(), id: snapshot.id } as CatalogProduct));
+    let priced;
+    try {
+      priced = priceCheckout(checkout, catalog);
+    } catch (error) {
+      throw new HttpsError('failed-precondition', error instanceof Error ? error.message : 'Invalid catalog.');
+    }
+    const order = {
+      ...priced,
+      userId,
+      customerName: checkout.customerName,
+      customerEmail: checkout.customerEmail,
+      phoneNumber: checkout.phoneNumber,
+      deliveryAddress: checkout.deliveryAddress,
+      paymentMethod: checkout.paymentMethod,
+      placedAt: new Date().toISOString(),
+      status: 'New',
+      stockAdjusted: false,
+      confirmationEmailSent: false
+    };
+    transaction.create(orderRef, order);
+    return { ...order, id: orderRef.id };
+  });
+});
 
 const smtpHost = defineString('SMTP_HOST');
 const smtpPort = defineString('SMTP_PORT', { default: '587' });

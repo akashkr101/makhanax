@@ -14,7 +14,7 @@ permissions:
   security-events: write
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.base.ref || github.ref_name }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -39,6 +39,29 @@ jobs:
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
 
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Install backend dependencies
+        run: npm ci --prefix functions
+
+      - name: Audit backend dependencies
+        run: npm audit --prefix functions --omit=dev --audit-level=high
+
+      - name: Build Cloud Functions
+        run: npm run build --prefix functions
+
+      - name: Set up Java for Firebase emulators
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Test backend and Firestore security
+        env:
+          FUNCTIONS_DISCOVERY_TIMEOUT: 60
+        run: npm run test:security
+
       - name: Build development application
         if: env.TARGET_BRANCH == 'dev'
         run: npm run build:dev
@@ -51,6 +74,9 @@ jobs:
         if: env.TARGET_BRANCH == 'prod'
         run: npm run build:production
 
+      - name: Verify built application entry page
+        run: npm run test:build
+
       - name: Upload validated web artifact
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
@@ -60,9 +86,18 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  quality:
+    if: github.event_name != 'pull_request'
+    name: Quality gate
+    needs: build
+    uses: ./.github/workflows/sonar.yml
+    secrets: inherit
+    permissions:
+      contents: read
+
   publish-development-image:
     if: github.event_name != 'pull_request' && github.ref_name == 'dev'
-    needs: build
+    needs: [build, quality]
     name: Publish development image
     runs-on: ubuntu-latest
     steps:
@@ -114,7 +149,7 @@ jobs:
 
   publish-test-image:
     if: github.event_name != 'pull_request' && github.ref_name == 'test'
-    needs: build
+    needs: [build, quality]
     name: Publish test image
     runs-on: ubuntu-latest
     steps:
@@ -166,7 +201,7 @@ jobs:
 
   publish-production-image:
     if: github.event_name != 'pull_request' && github.ref_name == 'prod'
-    needs: build
+    needs: [build, quality]
     name: Publish production image
     runs-on: ubuntu-latest
     steps:

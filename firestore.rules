@@ -43,19 +43,6 @@ service cloud.firestore {
         request.resource.data.role in ['ADMIN', 'CUSTOMER'];
     }
 
-    function validOrder() {
-      return request.resource.data.keys().hasAll(['userId', 'customerName', 'customerEmail', 'placedAt', 'total', 'paymentMethod', 'status', 'items']) &&
-        request.resource.data.keys().hasOnly(['userId', 'customerName', 'customerEmail', 'placedAt', 'total', 'paymentMethod', 'status', 'items', 'stockAdjusted', 'confirmationEmailSent', 'confirmationEmailSentAt']) &&
-        request.resource.data.userId == request.auth.uid &&
-        request.resource.data.customerName is string && request.resource.data.customerName.size() <= 120 &&
-        request.resource.data.customerEmail is string && request.resource.data.customerEmail.size() <= 320 &&
-        request.resource.data.placedAt is string && request.resource.data.placedAt.size() <= 40 &&
-        request.resource.data.total is number && request.resource.data.total >= 0 &&
-        request.resource.data.paymentMethod is string && request.resource.data.paymentMethod.size() <= 30 &&
-        request.resource.data.status == 'New' &&
-        request.resource.data.items is list && request.resource.data.items.size() > 0 && request.resource.data.items.size() <= 50;
-    }
-
     function validReview() {
       return request.resource.data.keys().hasAll(['productId', 'userId', 'userName', 'rating', 'comment', 'createdAt', 'updatedAt', 'helpful']) &&
         request.resource.data.keys().hasOnly(['productId', 'userId', 'userName', 'rating', 'comment', 'createdAt', 'updatedAt', 'helpful']) &&
@@ -98,7 +85,7 @@ service cloud.firestore {
     match /orders/{orderId} {
       allow get: if isOwner(resource.data.userId) || isAdmin();
       allow list: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
-      allow create: if signedIn() && validOrder();
+      allow create: if false;
       allow update, delete: if isAdmin();
     }
 

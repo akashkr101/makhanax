@@ -2,3 +2,5 @@ lib/
 node_modules/
 .env
 .env.*
+!.env.demo-makhanax
+.secret.local

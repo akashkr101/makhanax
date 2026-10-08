@@ -335,29 +335,19 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       }
       await this.orderHistoryService.updateStatus(orderId, nextStatus);
       const updatedOrder: OrderRecord = { ...order, status: nextStatus };
-      let stockAdjusted = order.stockAdjusted;
       if (nextStatus === 'Confirmed' && !order.stockAdjusted) {
         try {
           await this.productService.confirmOrderStock(order.items);
-          stockAdjusted = true;
           await this.orderHistoryService.markStockAdjusted(orderId);
         } catch (stockError: unknown) {
           this.orderActionError.set(`Order confirmed, but stock could not be updated. ${this.formatError(stockError)}`);
           console.error('Updating confirmed order stock failed:', stockError);
         }
       }
-      if (nextStatus === 'Confirmed' && !order.confirmationEmailSent) {
-        try {
-          const sent = await this.orderEmailService.sendOrderConfirmation({ ...updatedOrder, stockAdjusted });
-          if (!sent) throw new Error(this.orderEmailService.error() || 'Email provider rejected the confirmation.');
-          await this.orderHistoryService.markConfirmationEmailSent(orderId);
-          this.orderActionNotice.set(`Order confirmed and email has been sent to ${order.customerName || 'the customer'}.`);
-        } catch (emailError: unknown) {
-          this.orderActionError.set(`Order confirmed, but email could not be sent. ${this.formatError(emailError)}`);
-          console.error('Sending order confirmation email failed:', emailError);
-        }
-      } else if (nextStatus === 'Confirmed') {
-        this.orderActionNotice.set(`Order confirmed. Confirmation email was already sent to ${order.customerName || 'the customer'}.`);
+      if (nextStatus === 'Confirmed') {
+        this.orderActionNotice.set(order.confirmationEmailSent
+          ? `Order confirmed. Confirmation email was already sent to ${order.customerName || 'the customer'}.`
+          : `Order confirmed. Confirmation email is queued for ${order.customerName || 'the customer'}.`);
       } else {
         const sent = await this.orderEmailService.sendOrderStatusUpdate(updatedOrder);
         if (!sent) throw new Error(this.orderEmailService.error() || 'Email provider rejected the status update.');

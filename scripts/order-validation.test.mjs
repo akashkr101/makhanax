@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import assert from 'node:assert/strict';
 
 const projectRoot = join(process.cwd());
 const targetFile = join(projectRoot, 'src/app/core/services/order-validation.ts');
@@ -53,3 +54,29 @@ if (invalidResult.valid) {
 }
 
 console.log('order validation checks passed');
+
+execSync('npx tsc --ignoreConfig --target ES2022 --module ES2022 --moduleResolution bundler --sourceMap --inlineSources --outDir .tmp-coverage/server-order-validation functions/src/order-validation.ts', { stdio: 'inherit' });
+const { validateCheckoutRequest, priceCheckout } = await import(new URL('../.tmp-coverage/server-order-validation/order-validation.js', import.meta.url).href);
+const checkout = {
+  requestId: 'test-request', customerName: 'Customer', customerEmail: 'customer@example.com',
+  phoneNumber: '9876543210', deliveryAddress: 'Test address', paymentMethod: 'cod',
+  expectedTotal: 400, items: [{ productId: 'p1', quantity: 2 }]
+};
+assert.equal(priceCheckout(validateCheckoutRequest(checkout), catalog).total, 400);
+assert.throws(() => validateCheckoutRequest({ ...checkout, paymentMethod: 'card' }));
+assert.throws(() => validateCheckoutRequest({ ...checkout, items: [{ productId: '../p1', quantity: 1 }] }));
+for (const quantity of [0, -1, 1.5, NaN, Infinity, 1001]) {
+  assert.throws(() => validateCheckoutRequest({ ...checkout, items: [{ productId: 'p1', quantity }] }));
+}
+assert.throws(() => validateCheckoutRequest({ ...checkout, items: [] }));
+assert.throws(() => validateCheckoutRequest({ ...checkout, items: Array(51).fill({ productId: 'p1', quantity: 1 }) }));
+assert.throws(() => validateCheckoutRequest({ ...checkout, customerEmail: 'invalid' }));
+assert.throws(() => validateCheckoutRequest({ ...checkout, deliveryAddress: '' }));
+assert.throws(() => priceCheckout({ ...checkout, expectedTotal: 1 }, catalog));
+assert.throws(() => priceCheckout(checkout, []));
+assert.throws(() => priceCheckout(checkout, [{ ...catalog[0], price: NaN }]));
+assert.throws(() => priceCheckout({ ...checkout, items: [{ productId: 'p1', quantity: 6 }, { productId: 'p1', quantity: 6 }] }, catalog));
+const duplicateItems = priceCheckout({ ...checkout, items: [{ productId: 'p1', quantity: 1 }, { productId: 'p1', quantity: 1 }] }, catalog);
+assert.equal(duplicateItems.items.length, 1);
+assert.equal(duplicateItems.items[0].quantity, 2);
+console.log('server order validation checks passed');

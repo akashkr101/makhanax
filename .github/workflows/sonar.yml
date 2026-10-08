@@ -1,10 +1,12 @@
 name: SonarQube
 
 on:
-  workflow_run:
-    workflows: [Build CI]
-    types: [completed]
-    branches: [dev, test, prod]
+  workflow_call:
+    secrets:
+      SONAR_TOKEN:
+        required: true
+      SONAR_HOST_URL:
+        required: true
   workflow_dispatch:
 
 permissions:
@@ -12,16 +14,13 @@ permissions:
 
 jobs:
   sonarqube:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request')
     name: SonarQube analysis
     runs-on: [self-hosted, Windows, X64]
     steps:
       - name: Check out source commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
 
       - name: Add Git Bash to PATH
         shell: powershell -ExecutionPolicy Bypass -File {0}
