@@ -65,3 +65,23 @@ jobs:
           }
           & $scannerPath '-Dsonar.qualitygate.wait=true'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Report failed quality gate conditions
+        if: failure()
+        shell: powershell -ExecutionPolicy Bypass -File {0}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $baseUrl = $env:SONAR_HOST_URL.TrimEnd('/')
+          $headers = @{ Authorization = "Bearer $env:SONAR_TOKEN" }
+          $result = Invoke-RestMethod -Uri "$baseUrl/api/qualitygates/project_status?projectKey=makhanax" -Headers $headers -TimeoutSec 30
+          Write-Output "Quality gate status: $($result.projectStatus.status)"
+          $result.projectStatus.conditions |
+            Select-Object status, metricKey, comparator, errorThreshold, actualValue |
+            ConvertTo-Json -Depth 5
+          $issues = Invoke-RestMethod -Uri "$baseUrl/api/issues/search?componentKeys=makhanax&resolved=false&inNewCodePeriod=true&ps=100" -Headers $headers -TimeoutSec 30
+          $issues.issues |
+            Select-Object component, line, rule, severity, type, message |
+            ConvertTo-Json -Depth 5
