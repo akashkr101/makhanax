@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { getApp, getApps, initializeApp } from 'firebase/app';
-import { addDoc, collection, doc, getDocs, getFirestore, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
+import { collection, doc, getFirestore, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { environment } from '../../../environments/environment';
 
 export type OrderStatus = 'New' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Cancelled';
@@ -21,6 +22,8 @@ export interface OrderRecord {
   placedAt: string;
   total: number;
   paymentMethod: string;
+  phoneNumber?: string;
+  deliveryAddress?: string;
   status: OrderStatus;
   stockAdjusted?: boolean;
   confirmationEmailSent?: boolean;
@@ -93,30 +96,28 @@ export class OrderHistoryService {
     this.allOrders.update((orders) => orders.map((order) => order.id === orderId ? { ...order, ...changes } : order));
   }
 
-  async record(userId: string, customerName: string, customerEmail: string, order: Omit<OrderRecord, 'id' | 'userId' | 'customerName' | 'customerEmail' | 'placedAt' | 'status'>): Promise<void> {
-    const placedAt = new Date().toISOString();
-    const payload = { ...order, userId, customerName, customerEmail, placedAt, status: 'New' as OrderStatus };
-    const localOrder: OrderRecord = { ...payload, id: `order-${Date.now()}` };
-    this.orders.update((orders) => [localOrder, ...orders].slice(0, 25));
-    this.writeLocalOrders(userId, this.orders());
-
-    if (environment.demoMode) {
-      this.error.set('');
-      return;
-    }
-
+  async record(userId: string, customerName: string, customerEmail: string, order: Omit<OrderRecord, 'id' | 'userId' | 'customerName' | 'customerEmail' | 'placedAt' | 'status'>, requestId: string): Promise<OrderRecord> {
     try {
-      const created = await Promise.race([
-        addDoc(collection(this.firestore, 'orders'), payload),
-        new Promise<never>((_, reject) => {
-          setTimeout(() => reject(new Error('order-save-timeout')), 10000);
-        })
-      ]);
-      this.orders.update((orders) => orders.map((existing) => existing.id === localOrder.id ? { ...existing, id: created.id } : existing));
+      const createOrder = httpsCallable<unknown, OrderRecord>(getFunctions(this.firebaseApp, 'asia-south1'), 'createOrder', { timeout: 20000 });
+      const result = await createOrder({
+        requestId,
+        customerName,
+        customerEmail,
+        phoneNumber: order.phoneNumber,
+        deliveryAddress: order.deliveryAddress,
+        paymentMethod: order.paymentMethod,
+        expectedTotal: order.total,
+        items: order.items.map((item) => ({ productId: item.productId, quantity: item.quantity }))
+      });
+      const created = result.data;
+      if (!created.id || created.userId !== userId) throw new Error('Invalid order response.');
+      this.orders.update((orders) => [created, ...orders.filter((existing) => existing.id !== created.id)].slice(0, 25));
+      this.writeLocalOrders(userId, this.orders());
       this.error.set('');
+      return created;
     } catch (error: unknown) {
-      this.error.set('Cloud sync is unavailable. Order saved on this device for now.');
-      console.error('Saving order to cloud failed, saved locally instead:', error);
+      this.error.set('Could not confirm your order. Retry to check or save the same order.');
+      throw error;
     }
   }
 

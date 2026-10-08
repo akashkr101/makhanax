@@ -4,7 +4,6 @@ import { AddressBookService, AddressCategory } from '../../core/services/address
 import { AuthService } from '../../core/services/auth.service';
 import { OrderHistoryService } from '../../core/services/order-history.service';
 import { PaymentService, PaymentDetails } from '../../core/services/payment.service';
-import { OrderEmailService } from '../../core/services/order-email.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { ProductService } from '../../core/services/product.service';
 import { validateOrderItems } from '../../core/services/order-validation';
@@ -22,11 +21,13 @@ export class CheckoutComponent {
   private readonly addressBookService = inject(AddressBookService);
   private readonly orderHistoryService = inject(OrderHistoryService);
   private readonly paymentService = inject(PaymentService);
-  private readonly orderEmailService = inject(OrderEmailService);
   private readonly notificationService = inject(NotificationService);
   private readonly productService = inject(ProductService);
   private loadedAddressUserId = '';
   private hasAppliedSavedAddress = false;
+  private readonly checkoutRequestId = crypto.randomUUID();
+  protected readonly placingOrder = signal(false);
+  protected readonly orderError = signal('');
   readonly items = input<CartItem[]>([]);
   readonly back = output<void>();
   readonly orderPlaced = output<void>();
@@ -134,9 +135,12 @@ export class CheckoutComponent {
 
   protected async placeOrder(event: Event): Promise<void> {
     event.preventDefault();
+    if (this.placingOrder()) return;
     const userId = this.authService.userId();
     if (!userId) return;
 
+    this.placingOrder.set(true);
+    this.orderError.set('');
     try {
       // Save delivery address
       await this.addressBookService.save(userId, this.addressCategory, {
@@ -169,14 +173,7 @@ export class CheckoutComponent {
 
       // Process payment
       const paymentDetails: PaymentDetails = {
-        method: this.paymentMethod,
-        upiId: this.paymentMethod === 'upi' ? (document.querySelector('#upi-id') as HTMLInputElement)?.value : undefined,
-        cardNumber: this.paymentMethod === 'card' ? (document.querySelector('#card-number') as HTMLInputElement)?.value : undefined,
-        cardholderName: this.paymentMethod === 'card' ? this.fullName : undefined,
-        expiryMonth: this.paymentMethod === 'card' ? (document.querySelector('#expiry-month') as HTMLInputElement)?.value : undefined,
-        expiryYear: this.paymentMethod === 'card' ? (document.querySelector('#expiry-year') as HTMLInputElement)?.value : undefined,
-        cvv: this.paymentMethod === 'card' ? (document.querySelector('#cvv') as HTMLInputElement)?.value : undefined,
-        bankName: this.paymentMethod === 'netbanking' ? (document.querySelector('#bank-select') as HTMLSelectElement)?.value : undefined
+        method: this.paymentMethod
       };
 
       const paymentResponse = await this.paymentService.processPayment(
@@ -189,13 +186,12 @@ export class CheckoutComponent {
         throw new Error(paymentResponse.message);
       }
 
-      // Generate order ID
-      const orderId = `ord-${Date.now()}`;
-
       // Record order after successful payment
-      await this.orderHistoryService.record(userId, this.fullName || 'Customer', this.emailAddress.trim().toLowerCase(), {
+      const createdOrder = await this.orderHistoryService.record(userId, this.fullName || 'Customer', this.emailAddress.trim().toLowerCase(), {
         total: validation.subtotal,
         paymentMethod: this.paymentMethod,
+        phoneNumber: this.phoneNumber,
+        deliveryAddress: this.deliveryAddress,
         items: validation.itemTotals.map((item) => ({
           productId: item.productId,
           name: item.name,
@@ -203,44 +199,25 @@ export class CheckoutComponent {
           quantity: item.quantity,
           price: item.unitPrice
         }))
-      });
-
-      // Send order confirmation email
-      if (this.emailAddress) {
-        void this.orderEmailService.sendOrderConfirmation({
-          id: orderId,
-          userId,
-          customerName: this.fullName,
-          customerEmail: this.emailAddress,
-          placedAt: new Date().toISOString(),
-          total: this.total(),
-          paymentMethod: this.paymentMethod,
-          status: 'New',
-          items: this.items().map((item) => ({
-            productId: item.product.id,
-            name: item.product.name,
-            size: item.product.size,
-            quantity: item.quantity,
-            price: item.product.price
-          }))
-        });
-      }
+      }, this.checkoutRequestId);
 
       // Send notification
       void this.notificationService.sendNotification(
         userId,
         'order_placed',
         'Order Placed Successfully',
-        `Your order #${orderId.slice(-6)} has been placed. Transaction ID: ${paymentResponse.transactionId}`,
+        `Your order #${createdOrder.id.slice(-6)} has been placed. Payment is due on delivery.`,
         'email',
-        orderId
+        createdOrder.id
       );
 
       this.orderPlaced.emit();
     } catch (error: unknown) {
       console.error('Placing order failed:', error);
       const errorMsg = error instanceof Error ? error.message : 'Failed to place order';
-      alert(`Error: ${errorMsg}`);
+      this.orderError.set(errorMsg);
+    } finally {
+      this.placingOrder.set(false);
     }
   }
 

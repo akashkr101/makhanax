@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { PaymentGateway } from './payment-gateway';
+import { environment } from '../../../environments/environment';
 
 export interface PaymentDetails {
   method: 'upi' | 'card' | 'netbanking' | 'cod';
@@ -37,50 +37,23 @@ export class PaymentService {
     this.paymentSuccess.set('');
 
     try {
-      if (!this.validatePaymentDetails(details)) {
-        throw new Error('Invalid payment details');
+      if (!Number.isFinite(amount) || amount <= 0 || !orderId) {
+        throw new Error('Invalid order amount or ID.');
       }
-
-      const gatewayOrder = await PaymentGateway.createOrder({
-        amount,
-        currency: 'INR',
-        orderId,
-        customerName: details.cardholderName || 'MakhanaX Customer',
-        customerEmail: 'customer@makhanax.local',
-        notes: {
-          paymentMethod: details.method,
-          orderId
-        }
-      });
-
-      if (!gatewayOrder.success) {
-        throw new Error(gatewayOrder.message);
+      if (details.method !== 'cod') {
+        throw new Error('Online payments are unavailable. Please choose cash on delivery.');
       }
-
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const verified = PaymentGateway.verifyPayment({
-        orderId: gatewayOrder.orderId,
-        amount: gatewayOrder.amount,
-        currency: gatewayOrder.currency,
-        razorpay_order_id: gatewayOrder.paymentGatewayOrderId,
-        razorpay_payment_id: `${gatewayOrder.orderId}-payment`,
-        razorpay_signature: 'demo-signature'
-      });
-
-      if (!verified) {
-        throw new Error('Payment verification failed.');
+      if (!environment.enableCashOnDelivery) {
+        throw new Error('Cash on delivery is unavailable.');
       }
-
-      const transactionId = this.generateTransactionId();
       const response: PaymentResponse = {
         success: true,
-        transactionId,
-        message: `Payment of ₹${amount} processed successfully via ${details.method.toUpperCase()}`,
+        transactionId: '',
+        message: 'Payment is due on delivery.',
         timestamp: Date.now()
       };
 
-      this.paymentSuccess.set(`Payment successful! Transaction ID: ${transactionId}`);
+      this.paymentSuccess.set(response.message);
       return response;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Payment processing failed. Please try again.';
@@ -94,27 +67,6 @@ export class PaymentService {
     } finally {
       this.processingPayment.set(false);
     }
-  }
-
-  private validatePaymentDetails(details: PaymentDetails): boolean {
-    switch (details.method) {
-      case 'upi':
-        return !!details.upiId && details.upiId.includes('@');
-      case 'card':
-        return !!(details.cardNumber && details.cardholderName && details.expiryMonth && details.expiryYear && details.cvv);
-      case 'netbanking':
-        return !!details.bankName;
-      case 'cod':
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  private generateTransactionId(): string {
-    const timestamp = Date.now().toString(36).toUpperCase();
-    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-    return `TXN${timestamp}${random}`;
   }
 
   clearMessages(): void {

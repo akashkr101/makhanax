@@ -6,7 +6,6 @@ export interface AppConfig {
   razorpay?: {
     keyId?: string;
     merchantId?: string;
-    webhookSecret?: string;
   };
   otpProvider: 'firebase' | 'twilio' | 'msg91' | 'mock';
   enableCashOnDelivery: boolean;

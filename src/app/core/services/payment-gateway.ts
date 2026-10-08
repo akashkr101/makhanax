@@ -38,41 +38,17 @@ export class PaymentGateway {
   static async createOrder(request: GatewayOrderRequest): Promise<GatewayOrderResponse> {
     const provider = this.provider();
 
-    if (provider === 'mock') {
-      return {
-        success: true,
-        orderId: request.orderId,
-        paymentGatewayOrderId: `MOCK_${request.orderId}`,
-        amount: request.amount,
-        currency: request.currency,
-        message: 'Mock gateway accepted the order.',
-        gateway: 'mock'
-      };
-    }
-
-    // Real gateways typically return an order ID here. This app keeps the contract ready for integration.
     return {
-      success: true,
+      success: false,
       orderId: request.orderId,
-      paymentGatewayOrderId: `gateway_${request.orderId}`,
       amount: request.amount,
       currency: request.currency,
-      message: `${provider.toUpperCase()} order created successfully.`,
+      message: 'Online payments require a configured server-side gateway.',
       gateway: provider
     };
   }
 
-  static verifyPayment(payload: PaymentVerificationPayload): boolean {
-    const provider = this.provider();
-
-    if (provider === 'mock') {
-      return !!payload.orderId || !!payload.razorpay_payment_id;
-    }
-
-    if (provider === 'razorpay') {
-      return !!payload.razorpay_order_id && !!payload.razorpay_payment_id && !!payload.razorpay_signature;
-    }
-
-    return !!payload.orderId;
+  static verifyPayment(_payload: PaymentVerificationPayload): boolean {
+    return false;
   }
 }

@@ -5,9 +5,17 @@
 /tmp
 /out-tsc
 /bazel-out
+/.tmp-coverage
 
 # Node
 /node_modules
+functions/node_modules/
+functions/lib/
+functions/.env.*
+!functions/.env.demo-makhanax
+functions/.secret.local
+gha-creds-*.json
+*-debug.log
 npm-debug.log
 yarn-error.log
 
