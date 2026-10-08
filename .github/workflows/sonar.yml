@@ -46,9 +46,22 @@ jobs:
         run: npm run test:coverage
 
       - name: SonarQube scan
-        uses: SonarSource/sonarqube-scan-action@v6
+        shell: powershell -ExecutionPolicy Bypass -File {0}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-          args: -Dsonar.qualitygate.wait=true
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $scannerVersion = '7.2.0.5079'
+          $archiveName = "sonar-scanner-cli-$scannerVersion-windows-x64.zip"
+          $archivePath = Join-Path $env:RUNNER_TEMP $archiveName
+          $extractPath = Join-Path $env:RUNNER_TEMP "sonar-scanner-$scannerVersion"
+          $downloadUrl = "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/$archiveName"
+          Invoke-WebRequest -Uri $downloadUrl -OutFile $archivePath -UseBasicParsing
+          Expand-Archive -LiteralPath $archivePath -DestinationPath $extractPath -Force
+          $scannerPath = Join-Path $extractPath "sonar-scanner-$scannerVersion-windows-x64\bin\sonar-scanner.bat"
+          if (-not (Test-Path $scannerPath)) {
+            throw 'SonarScanner executable was not found after extraction.'
+          }
+          & $scannerPath '-Dsonar.qualitygate.wait=true'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
